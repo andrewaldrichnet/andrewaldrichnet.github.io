@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Andrew Aldrich | Developer</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
+      crossorigin="anonymous"
+    />
+
+    <style>
+      .image-gallery > div {
+        flex-basis: 350px;
+      }
+
+      .image-gallery div img {
+        object-fit: cover;
+        max-width: 100%;
+        height: auto;
+        vertical-align: middle;
+        border-radius: 5px;
+      }
+
+      @media all and (max-width: 767px) {
+        .image-gallery > div {
+          flex-basis: 100%;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <header
+        class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom"
+      >
+        <a
+          href="/"
+          class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none"
+        >
+          <svg class="bi me-2" width="40" height="32">
+            <use xlink:href="#bootstrap" />
+          </svg>
+          <span class="fs-4">Andrew Aldrich</span>
+        </a>
+
+        <ul class="nav nav-pills">
+          <li class="nav-item"><a href="#Projects" class="nav-link">Projects</a></li>
+          <li class="nav-item"><a href="#Education" class="nav-link">Education</a></li>
+          <li class="nav-item"><a href="#Interests" class="nav-link">Interests</a></li>
+          <li class="nav-item"><a href="#" class="nav-link">About</a></li>
+        </ul>
+      </header>
+    </div>
+    <div class="container my-5">
+      <div
+        class="row p-4 pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-3 border shadow-lg"
+      >
+        <div class="col-lg-7 p-3 p-lg-5 pt-lg-3">
+          <h1 class="display-4 fw-bold lh-1">Andrew Aldrich | Developer</h1>
+          <p class="lead">
+            I'm a software developer that innovates new ways to solve peoples
+            problems to make running business more efficient. Specifically, the
+            company I work for makes websites and software for distributors.
+          </p>
+          <div>
+            <div class="d-flex gap-3 align-items-center mb-3">
+              <div class="card-title d-inline-block fw-bold">Skills</div>
+              <div class="badge bg-light text-dark">SQL</div>
+              <div class="badge bg-light text-dark">HTML</div>
+              <div class="badge bg-light text-dark">CSS</div>
+              <div class="badge bg-light text-dark">JavaScript</div>
+              <div class="badge bg-light text-dark">Xamarin</div>
+              <div class="badge bg-light text-dark">Angular</div>
+              <div class="badge bg-light text-dark">Asp.Net</div>
+            </div>
+          </div>
+          <div
+            class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3"
+          >
+            <a
+              href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+              class="btn btn-primary btn-lg px-4 me-md-2 fw-bold"
+              >Connect On LinkedIn</a
+            >
+          </div>
+        </div>
+        <div class="col-lg-4 offset-lg-1 p-0 overflow-hidden shadow-lg">
+          <img class="rounded-lg-3" src="assets/me.jpg" alt="" width="350" />
+        </div>
+      </div>
+      <div class="my-5"></div>
+      <div class="my-5 text-center py-5">
+        <h2 class="mb-3">Certificates</h2>
+        <div class="row text-start gap-3 gap-md-0">
+          <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
+            <div class="border border-1 rounded-3 p-3 flex-grow-1">
+              <h3>Oracle Database SQL Certified</h3>
+              <div class="text-muted">Oracle</div>
+            </div>
+          </div>
+          <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
+            <div class="border border-1 rounded-3 p-3 flex-grow-1">
+              <h3>CompTIA Project+</h3>
+              <div class="text-muted">CompTIA</div>
+            </div>
+          </div>
+          <div
+            class="col-12 col-md-6 col-lg-3 d-flex flex-column mt-0 mt-lg-0 mt-md-3"
+          >
+            <div class="border border-1 rounded-3 p-3 flex-grow-1">
+              <h3>ITL Foundation Level</h3>
+              <div class="text-muted">AXELOS Global Best Practice</div>
+            </div>
+          </div>
+          <div
+            class="col-12 col-md-6 col-lg-3 d-flex flex-column mt-0 mt-lg-0 mt-md-3"
+          >
+            <div class="border border-1 rounded-3 p-3 flex-grow-1">
+              <h3>Site Development Associate</h3>
+              <div class="text-muted">Certification Partners (CIW)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="border border-1 rounded-2 p-5">
+        <h2 id="Projects">Projects</h2>
+
+        <div class="row">
+          <div class="col-12 col-md-8">
+            <h3>Team Reporting Tool</h3>
+            <p>
+              I developed this tool to promote healthy teams in the workplace. I
+              developed both a fully functional website and iOS and Android app.
+              (Another developer helped create the marketing and styling for the
+              site) Through building this application I learned a lot. It helped
+              me grow in full stack development.
+            </p>
+            <p>
+              The tool allows a business to invite team members. Team members
+              can then be assigned a leader. Every week team members fill out a
+              report. It asks simple question, such as their high and low of the
+              week and allows them to rate their stress, moral, and workload.
+              Also, I allowed for users to customize the report to add their own
+              questions and ratings.
+            </p>
+            <h5>For the Nerds</h5>
+            <p>
+              For the backend layer, Entity Framework was utilized to write and
+              access the SQL database. The data was then passed through several
+              layers of business logic, view models, to the APIs. Data was then
+              consumed on the frontend. Angular was used in the frontend with
+              Bootstrap for the styling.
+            </p>
+          </div>
+          <div class="col-12 col-md-4">
+            <img
+              class="mw-100 shadow-lg"
+              src="assets/team-reporting-tool.jpg"
+            />
+          </div>
+        </div>
+
+        <div class="row mt-5">
+          <div class="col-12">
+            <h3>WGU Capstone Project</h3>
+            <p>
+              For my capstone project I wrote a website that would use machine
+              learning and AI to predict the urgency level of support tickets.
+              The goal was that given a set of data that contains support
+              tickets that have been labeled as urgent/not urgent on a scale of
+              0-3, the computer would be able to predict the urgency of a new
+              support ticket. The project resulted in an accuracy result of
+              85.82%
+            </p>
+            <h5>For the Nerds</h5>
+            <p>
+              I utilized Python for analyzing and build a model for the AI
+              algorithm. Then I used the model and built the website using
+              Flask. This made it easy to integrate the model and the site.
+            </p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col-12">
+            <div class="d-flex gap-3 flex-wrap justify-content-center image-gallery">
+              <div><img class="shadow-sm" src="assets/capstone/home.png"></div>
+              <!--<div><img class="shadow-sm" src="assets/capstone/dashboard.png"></div>
+              <div><img class="shadow-sm" src="assets/capstone/login.png"></div>-->
+              <div><img class="shadow-sm" src="assets/capstone/predict.png"></div>
+              <!--<div><img class="shadow-sm" src="assets/capstone/predict_multiple.png"></div>
+              <div><img class="shadow-sm" src="assets/capstone/view_tickets.png"></div>-->
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row my-5">
+        <div class="col-12 col-md-6">
+          <div class="card border-primary">
+            <div class="card-body">
+              <h2 class="fs-6">Current Job</h2>
+              <h3>Developer</h3>
+              <h4>Aldrich Web Solutions</h4>
+              <div class="text-muted">Sep 2020 - Present</div>
+            </div>
+          </div>
+        </div>
+        <div class="col-12 col-md-6 pt-3 pt-md-0">
+          <div class="card">
+            <div class="card-body">
+              <h2 class="fs-6" id="Education">Education</h2>
+              <div class="d-flex flex-column gap-3">
+                <div>
+                  <h3>Western Governors University</h3>
+                  <h4 class="d-inline-block fs-5">Bachelor's Degree</h4>
+                  <div class="text-muted d-inline-block">2019 - 2020</div>
+                </div>
+                <div>
+                  <h3>John A Logan College</h3>
+                  <h4 class="d-inline-block fs-5">Associate of Science</h4>
+                  <div class="text-muted d-inline-block">2016 - 2019</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-12 col-md-7">
+          <div>
+            <h2 id="Interests">Interests</h2>
+            <div class="d-flex gap-3 my-2">
+              <div class="badge text-dark bg-light">Guitar</div>
+              <div class="badge text-dark bg-light">Drums</div>
+              <div class="badge text-dark bg-light">Piano</div>
+              <div class="badge text-dark bg-light">Photography</div>
+              <div class="badge text-dark bg-light">Video</div>
+            </div>
+            <p>
+              I serve at my local church Johnston City United Pentecostal Church
+              playing guitar and drums for the services. As a worship musician,
+              I get to play many different styles of music. I started playing
+              guitar at an early age of 8 and have loved it ever since. I can
+              remember begging my parents to get me lessons and they finally
+              went to the guitar store. The store told them that they usually
+              started at 9 but were willing to give it a shot. I’m forever
+              thankful to my first guitar teacher Danny for taking a chance on
+              me. Now I get the opportunity to serve every week. I’ve also been
+              given several opportunities to play at church youth camps, youth
+              conventions, and other events.
+            </p>
+          </div>
+        </div>
+        <div class="col-12 col-md-5">
+          <h2>Favorite Songs</h2>
+          <div>
+            <iframe
+              style="border-radius: 12px"
+              src="https://open.spotify.com/embed/playlist/6r8ujX9j08mpgqj0Y8Ij5L?utm_source=generator"
+              width="100%"
+              height="380"
+              frameborder="0"
+              allowfullscreen=""
+              allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+              loading="lazy"
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="row my-5">
+        <div class="col-12">
+          <h3>AYC Benelux</h3>
+          <h6>2019 Missions Trip</h6>
+          <div>
+            I got an awesome opportunity to go on a missions trip to the Benelux
+            Region Belgium, The Netherlands, and Luxembourg. It was such an
+            amazing experience. During the trip we did outreach in the streets
+            of each of the countries where we sang songs of worship. We also had
+            several other opportunities to speak and minister to people of those
+            nations. While we were there we also got to see a few of the sites.
+            Some of the coolest things we saw were the castles in Luxembourg.
+            Check out a few of the pictures I took.
+          </div>
+          <div
+            class="d-flex flex-wrap justify-content-center mt-3 gap-2 image-gallery"
+          >
+            <div>
+              <img src="assets/benelux1.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux2.jpg" alt="" />
+            </div>
+            <!--<div>
+              <img src="assets/benelux4.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux5.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux6.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux7.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux8.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux9.jpg" alt="" />
+            </div>
+            <div>
+              <img src="assets/benelux10.jpg" alt="" />
+            </div>-->
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="my-5 mb-0 py-5 bg-dark text-white text-center">
+      <h2>Connect On LinkedIn</h2>
+      <div class="mt-3">
+        <a
+          href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+          class="btn btn-primary btn-lg mw-100"
+          style="width: 390px"
+          >View Profile</a
+        >
+      </div>
+    </div>
+    <footer class="bg-black text-light py-3 px-3">
+      &copy; <script>document.write(new Date().getFullYear())</script> Andrew Aldrich
+    </footer>
+    <script
+      src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
+      integrity="sha384-oBqDVmMz9ATKxIep9tiCxS/Z9fNfEXiDAYTujMAeBAsjFuCZSmKbSSUnQlmh/jp3"
+      crossorigin="anonymous"
+    ></script>
+    <script
+      src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"
+      integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
+      crossorigin="anonymous"
+    ></script>
+  </body>
+</html>
