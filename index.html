@@ -12,6 +12,10 @@
     />
 
     <style>
+      .bg-primary {
+        background-color: #181c34 !important;
+      }
+
       .image-gallery > div {
         flex-basis: 350px;
       }
@@ -29,152 +33,440 @@
           flex-basis: 100%;
         }
       }
+
+      .certificate-card .certificate-card-content {
+        height: 300px;
+      }
+
+      .certificate-card {
+        width: 330px;
+        max-width: 100%;
+        position: relative;
+        z-index: 1;
+      }
+
+      .section-title {
+        font-size: 36px;
+        margin: 42px 0;
+        font-weight: bold;
+      }
+
+      .project-title {
+        font-size: 44px;
+        font-weight: bold;
+      }
+      .project-skills {
+        font-weight: bold;
+        margin: 12px 0;
+        font-size: 20px;
+        max-width: 100%;
+      }
+
+      .project-skills-full {
+        justify-content: center;
+      }
+      .penguinjump-gif {
+        position: absolute;
+        top: 9px;
+        left: 8px;
+        background-size: cover;
+        background-position: center;
+        border-radius: 8px;
+        right: 8px;
+        bottom: 8px;
+      }
+      .penguinjump-container {
+        position: relative;
+        width: 350px;
+        height: 172px;
+        overflow: hidden;
+      }
+      .penguinjump-phone {
+        position: absolute;
+        left: 0;
+        right: 0;
+        width: 100%;
+        height: auto;
+      }
+
+      .projects-header {
+        background-image: url("assets/home/projectsbg.svg");
+        background-position: center;
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+
+      @media all and (min-width: 992px) {
+        .side-certificate {
+          margin-top: 64%;
+        }
+        .main-title {
+          font-size: 64px;
+        }
+
+        .project-title {
+          font-size: 72px;
+        }
+
+        .section-title {
+          font-size: 54px;
+          margin: 60px 0;
+        }
+
+        .project-skills {
+          max-width: 250px;
+        }
+
+        .project-skills-full {
+          max-width: 100%;
+        }
+      }
+
+      .code-bg {
+        background-image: url("assets/home/codebgmiddle.svg");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: cover;
+        position: relative;
+      }
+      .code-bg::before {
+        background-image: url("assets/home/codebgtop.svg");
+        content: "";
+        background-position: top right;
+        background-size: contain;
+        position: absolute;
+        top: -1px;
+        right: -1px;
+        height: 100%;
+        width: 100%;
+        background-repeat: no-repeat;
+        z-index: 0;
+        max-width: 33.3%;
+      }
+      .code-bg::after {
+        background-image: url("assets/home/greenwave.svg");
+        content: "";
+        background-position: bottom;
+        background-size: cover;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        background-repeat: no-repeat;
+        z-index: 0;
+      }
+
+      @media all and (max-width: 991px) {
+        .certificate-card img {
+          max-width: 70px;
+        }
+        .certificate-card {
+          width: 100%;
+          max-width: 300px;
+          margin: 12px auto;
+          box-shadow: none;
+          background-color: #fff !important;
+          margin-top: 12px !important;
+          box-shadow: none !important;
+          border: #eee solid 1px;
+        }
+        .certificate-card .certificate-card-content {
+          height: auto;
+        }
+
+        .code-bg {
+          background-image: none;
+        }
+      }
+
+      @media all and (max-width: 500px) {
+        .projects-cta-section .btn {
+          width: 100%;
+        }
+        .projects-cta-section {
+          max-width: 280px;
+          margin: auto;
+        }
+      }
     </style>
   </head>
-  <body>
-    <div class="container">
-      <header
-        class="d-flex flex-wrap justify-content-center py-3 mb-4 border-bottom"
-      >
-        <a
-          href="/"
-          class="d-flex align-items-center mb-3 mb-md-0 me-md-auto text-dark text-decoration-none"
-        >
-          <svg class="bi me-2" width="40" height="32">
-            <use xlink:href="#bootstrap" />
-          </svg>
-          <span class="fs-4">Andrew Aldrich</span>
-        </a>
 
-        <ul class="nav nav-pills">
-          <li class="nav-item">
-            <a href="#Projects" class="nav-link">Projects</a>
-          </li>
-          <li class="nav-item">
-            <a href="#Education" class="nav-link">Education</a>
-          </li>
-          <li class="nav-item">
-            <a href="#Interests" class="nav-link">Interests</a>
-          </li>
-          <li class="nav-item"><a href="#" class="nav-link">About</a></li>
-        </ul>
-      </header>
-    </div>
-    <div class="container my-5">
+  <body>
+    <div class="bg-primary">
       <div
-        class="row p-4 pb-0 pe-lg-0 pt-lg-5 align-items-center rounded-3 border shadow-lg"
+        style="
+          background-image: url('assets/home/codebackground.png');
+          background-size: cover;
+        "
+        class="text-light"
       >
-        <div class="col-lg-7 p-3 p-lg-5 pt-lg-3">
-          <div class="d-flex gap-3">
-            <div class="d-lg-none d-flex align-items-center">
-              <div
-                class="rounded-circle shadow-lg border border-4 border-dark"
-                style="
-                  background-image: url('assets/me.jpg');
-                  width: 70px;
-                  height: 70px;
-                  background-size: cover;
-                  background-position-y: -5px;
-                "
-              ></div>
-            </div>
-            <h1 class="display-4 fw-bold lh-1">
-              Andrew Aldrich | Full Stack Engineer
-            </h1>
-          </div>
-          <p class="lead">
-            I'm a software developer that innovates new ways to solve peoples
-            problems to make running business more efficient. Specifically, the
-            company I work for makes websites and software for distributors.
-          </p>
-          <div>
-            <div class="d-flex gap-3 align-items-center mb-3 flex-wrap">
-              <div class="card-title d-inline-block fw-bold">Skills</div>
-              <div class="badge bg-light text-dark">SQL</div>
-              <div class="badge bg-light text-dark">HTML</div>
-              <div class="badge bg-light text-dark">CSS</div>
-              <div class="badge bg-light text-dark">JavaScript</div>
-              <div class="badge bg-light text-dark">Xamarin</div>
-              <div class="badge bg-light text-dark">Angular</div>
-              <div class="badge bg-light text-dark">.Net</div>
-            </div>
-          </div>
-          <div
-            class="d-grid gap-2 d-md-flex justify-content-md-start mb-4 mb-lg-3"
-          >
-            <a
-              href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
-              class="btn btn-primary btn-lg px-4 me-md-2 fw-bold"
-              >Connect On LinkedIn</a
+        <div class="container">
+          <header class="">
+            <nav class="navbar navbar-expand-lg navbar-dark py-4">
+              <div class="container-fluid">
+                <a class="navbar-brand" href="#">Andrew Aldrich</a>
+                <button
+                  class="navbar-toggler"
+                  type="button"
+                  data-bs-toggle="collapse"
+                  data-bs-target="#navbarNavAltMarkup"
+                  aria-controls="navbarNavAltMarkup"
+                  aria-expanded="false"
+                  aria-label="Toggle navigation"
+                >
+                  <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
+                  <div class="navbar-nav ms-auto gap-4">
+                    <a
+                      class="nav-link active"
+                      aria-current="page"
+                      href="#projects-overview"
+                      >Projects</a
+                    >
+                    <a class="nav-link active" href="#education">Education</a>
+                    <a class="nav-link active" href="#interests">Interests</a>
+                    <a class="nav-link btn bg-light text-dark btn-lg" target="_blank" href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+                      >Connect on LinkedIn</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </nav>
+          </header>
+        </div>
+        <div class="container mt-5">
+          <div class="row mx-md-5">
+            <div
+              class="col-12 col-lg-6 order-1 order-lg-0 text-center text-lg-start"
             >
+              <h2 style="font-size: 54px" class="fw-light d-none d-lg-block">
+                Andrew Aldrich
+              </h2>
+              <h1 class="fw-bold my-3 main-title">Full Stack Engineer</h1>
+              <h6 class="fs-4 fw-light" style="line-height: 140%">
+                I'm a software developer that innovates new ways to solve
+                peoples’ problems to make running business more efficient.
+              </h6>
+              <div
+                class="d-flex flex-wrap gap-3 my-3 fw-bold justify-content-center justify-content-lg-start"
+              >
+                <div>SQL</div>
+                <div>HTML</div>
+                <div>CSS</div>
+                <div>Angular</div>
+                <div>C#</div>
+                <div>Typescript</div>
+                <div>Microsoft .NET</div>
+                <div>iOS & Android</div>
+              </div>
+              <div
+                class="d-flex flex-wrap gap-3 mt-2 mb-5 justify-content-center justify-content-lg-start"
+              >
+                <a
+                  class="btn btn-light btn-lg cta-btn"
+                  href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+                  target="_blank"
+                  >Connect on LinkedIn</a
+                >
+                <a
+                  href="#projects-overview"
+                  class="btn btn-lg btn-outline-light"
+                  >View Projects</a
+                >
+              </div>
+            </div>
+            <div class="col-lg-1 d-none d-lg-block"></div>
+            <div class="col-12 col-lg-5">
+              <img
+                src="assets/home/andrewaldrich.png"
+                alt="Picture of Andrew Aldrich"
+                class="mw-100 d-none d-lg-block"
+              />
+              <div class="d-lg-none text-center">
+                <img
+                  src="assets/home/andrewaldrichmobile.png"
+                  alt="Picture of Andrew Aldrich"
+                  class="mw-100"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="code-bg py-lg-5">
+      <div class="py-5 container">
+        <h2 class="text-center section-title">Certificates</h2>
+        <div class="row my-5 certificate-card-row">
+          <div class="col-12 col-lg-4 justify-content-center d-flex">
+            <div class="mw-100">
+              <div
+                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center side-certificate text-center bg-light"
+              >
+                <div class="py-2 certificate-card-content px-5">
+                  <img src="assets/home/ciwlogo.png" alt="CIW" />
+                  <h4>Site Development Associate</h4>
+                  <div class="text-muted">Certification Partners (CIW)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4 justify-content-center d-flex">
+            <div class="mw-100">
+              <div
+                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center text-center bg-light"
+              >
+                <div class="py-2 certificate-card-content px-5">
+                  <img src="assets/home/comptialogo.png" alt="CompTIA" />
+                  <h4>CompTIA Project+</h4>
+                  <div class="text-muted">CompTIA</div>
+                </div>
+              </div>
+              <div
+                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center mt-5 text-center bg-light"
+              >
+                <div class="py-2 certificate-card-content px-5">
+                  <img src="assets/home/oraclelogo.png" alt="Oracle" />
+                  <h4>Oracle Database SQL Certified</h4>
+                  <div class="text-muted">Oracle</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4 justify-content-center d-flex">
+            <div class="mw-100">
+              <div
+                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center side-certificate text-center bg-light"
+              >
+                <div class="py-2 certificate-card-content px-5">
+                  <img src="assets/home/axeloslogo.png" alt="AXELOS" />
+                  <h4>ITL Foundation Level</h4>
+                  <div class="text-muted">AXELOS Global Best Practice</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="bg-primary text-light pb-5 container-fluid"
+      id="projects-overview"
+    >
+      <div class="py-5">
+        <div class="projects-header">
+          <div class="text-center section-title py-5">
+            <div class="d-flex gap-1 align-items-center justify-content-center">
+              <img
+                src="assets/home/projectsicon.svg"
+                alt="icon"
+                height="35"
+                class="me-1"
+                style="margin-top: -5px"
+              />
+              <div>Projects</div>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-center">
+          <div class="row w-100" style="max-width: 800px">
+            <div class="col-12 col-md-6">
+              <div class="d-flex flex-column gap-5 px-3">
+                <div>
+                  <h5 class="fw-bold">Team Reporting Tool</h5>
+                  <h6 class="opacity-75">A tool for team health</h6>
+                  <a class="text-light btn btn-link px-0" href="#trt"
+                    >View Project</a
+                  >
+                </div>
+                <div>
+                  <h5 class="fw-bold">
+                    AI/ML Support Ticket Urgency Predictor
+                  </h5>
+                  <h6 class="opacity-75">Using AI & ML to predict urgency</h6>
+                  <a class="text-light btn btn-link px-0" href="#capstone"
+                    >View Project</a
+                  >
+                </div>
+              </div>
+            </div>
+            <div class="col-12 col-md-6 mt-5 mt-md-0">
+              <div class="d-flex flex-column gap-5 px-3">
+                <div>
+                  <h5 class="fw-bold">Musicians Worship</h5>
+                  <h6 class="opacity-75">A community for church musicians</h6>
+                  <a class="text-light btn btn-link px-0" href="#mw"
+                    >View Project</a
+                  >
+                </div>
+
+                <div>
+                  <h5 class="fw-bold">Penguin Jump</h5>
+                  <h6 class="opacity-75">An infinite penguin runner</h6>
+                  <a class="text-light btn btn-link px-0" href="#penguinjump"
+                    >View Project</a
+                  >
+                </div>
+              </div>
+            </div>
           </div>
         </div>
         <div
-          class="col-lg-4 offset-lg-1 p-0 overflow-hidden shadow-lg d-none d-lg-block"
+          class="d-flex justify-content-center gap-3 align-items-center py-5 flex-wrap projects-cta-section"
         >
-          <img
-            class="rounded-lg-3"
-            src="assets/me.jpg"
-            alt="A Aldrich"
-            width="350"
-          />
+          <a
+            class="btn btn-light btn-lg cta-btn"
+            href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+            target="_blank"
+            >Connect on LinkedIn</a
+          >
+          <a href="#projects" class="btn btn-outline-light btn-lg"
+            >Keep Reading</a
+          >
         </div>
       </div>
-      <div class="my-5"></div>
-      <div class="my-5 text-center py-5">
-        <h2 class="mb-3">Certificates</h2>
-        <div class="row text-start gap-3 gap-md-0">
-          <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
-            <div class="border border-1 rounded-3 p-3 flex-grow-1">
-              <h3>Oracle Database SQL Certified</h3>
-              <div class="text-muted">Oracle</div>
-            </div>
-          </div>
-          <div class="col-12 col-md-6 col-lg-3 d-flex flex-column">
-            <div class="border border-1 rounded-3 p-3 flex-grow-1">
-              <h3>CompTIA Project+</h3>
-              <div class="text-muted">CompTIA</div>
-            </div>
-          </div>
+    </div>
+    <div class="py-5" id="trt">
+      <div class="container mt-3" id="projects">
+        <div class="row">
           <div
-            class="col-12 col-md-6 col-lg-3 d-flex flex-column mt-0 mt-lg-0 mt-md-3"
+            class="col-12 col-lg-4 project-title-section d-flex gap-1 flex-column"
           >
-            <div class="border border-1 rounded-3 p-3 flex-grow-1">
-              <h3>ITL Foundation Level</h3>
-              <div class="text-muted">AXELOS Global Best Practice</div>
+            <h2 class="project-title">Team Reporting Tool</h2>
+            <h4 class="text-muted">A tool for team health</h4>
+            <div class="d-flex gap-3 flex-wrap project-skills">
+              <div>C#</div>
+              <div>Angular</div>
+              <div>Entity Framework</div>
+              <div>Microsoft .NET</div>
+              <div>iOS & Android</div>
+              <div>Xamarin</div>
             </div>
           </div>
-          <div
-            class="col-12 col-md-6 col-lg-3 d-flex flex-column mt-0 mt-lg-0 mt-md-3"
-          >
-            <div class="border border-1 rounded-3 p-3 flex-grow-1">
-              <h3>Site Development Associate</h3>
-              <div class="text-muted">Certification Partners (CIW)</div>
+          <div class="col-12 col-lg-8">
+            <div class="ms-lg-5">
+              <img
+                src="assets/home/trtscreenshots.png"
+                class="mw-100 my-3 my-lg-0"
+                alt="Screenshot of the team reporting tool"
+              />
             </div>
           </div>
         </div>
       </div>
-
-      <div class="border border-1 rounded-2 p-5">
-        <h2 id="Projects">Projects</h2>
-
+      <div class="container mt-3">
         <div class="row">
           <div class="col-12 col-md-8">
-            <h3 class="mb-1">Team Reporting Tool</h3>
-            <div class="flex gap-3 mb-2">
-              <div class="badge bg-light text-dark">C#</div>
-              <div class="badge bg-light text-dark">.Net</div>
-              <div class="badge bg-light text-dark">Angular</div>
-              <div class="badge bg-light text-dark">SQL</div>
-            </div>
             <p>
               I developed this tool to promote healthy teams in the workplace. I
               developed both a fully functional website and iOS and Android app.
               (Another developer helped create the marketing and styling for the
               site) Through building this application I learned a lot. It helped
               me grow in full stack development.
-            </p>
-            <p>
+              <br />
               The tool allows a business to invite team members. Team members
               can then be assigned a leader. Every week team members fill out a
               report. It asks simple question, such as their high and low of the
@@ -182,7 +474,9 @@
               Also, I allowed for users to customize the report to add their own
               questions and ratings.
             </p>
-            <h5>For the Nerds</h5>
+          </div>
+          <div class="col-12 col-md-4">
+            <h4>Tech Used In Project</h4>
             <p>
               For the backend layer, Entity Framework was utilized to write and
               access the SQL database. The data was then passed through several
@@ -191,23 +485,45 @@
               Bootstrap for the styling.
             </p>
           </div>
-          <div class="col-12 col-md-4">
-            <img
-              class="mw-100 shadow-lg"
-              src="assets/team-reporting-tool.jpg"
-            />
+        </div>
+      </div>
+    </div>
+    <div class="py-lg-5 my-5" id="capstone">
+      <div class="container">
+        <div class="row">
+          <div class="col-12 col-lg-5 order-1 order-lg-0">
+            <div class="me-lg-5 my-3 my-lg-0 text-center">
+              <img
+                src="assets/home/wgucapstone.png"
+                class="mw-100 rounded rounded-5 shadow-lg"
+                alt="Screenshot of my capstone project"
+                width="500"
+                style="width: 500px"
+              />
+            </div>
+          </div>
+          <div
+            class="col-12 col-lg-7 project-title-section d-flex gap-1 flex-column mt-3 mt-lg-0"
+          >
+            <h2 class="project-title">
+              AI/ML Support Ticket Urgency Predictor
+            </h2>
+            <h4 class="text-muted">Using AI & ML to predict urgency</h4>
+            <div class="d-flex gap-3 flex-wrap project-skills">
+              <div>Python</div>
+              <div>Flask</div>
+              <div>HTML</div>
+              <div>CSS</div>
+              <div>JavaScript</div>
+              <div>AI</div>
+              <div>Machine Learning</div>
+            </div>
           </div>
         </div>
-
-        <div class="row mt-5">
-          <div class="col-12">
-            <h3 class="mb-1">AI/ML Support Ticket Urgency Predictor</h3>
-            <div class="flex gap-3 mb-2">
-              <div class="badge bg-light text-dark">Python</div>
-              <div class="badge bg-light text-dark">Flask</div>
-              <div class="badge bg-light text-dark">HTML</div>
-              <div class="badge bg-light text-dark">CSS</div>
-            </div>
+      </div>
+      <div class="container mt-5">
+        <div class="row">
+          <div class="col-12 col-md-8">
             <p>
               For my WGU capstone project I wrote a website that would use
               machine learning and AI to predict the urgency level of support
@@ -217,7 +533,9 @@
               a new support ticket. The project resulted in an accuracy result
               of 85.82%
             </p>
-            <h5>For the Nerds</h5>
+          </div>
+          <div class="col-12 col-md-4">
+            <h4>Tech Used In Project</h4>
             <p>
               I utilized Python for analyzing and build a model for the AI
               algorithm. Then I used the model and built the website using
@@ -225,93 +543,96 @@
             </p>
           </div>
         </div>
-        <div class="row">
-          <div class="col-12">
+      </div>
+    </div>
+    <div class="text-light py-5 mt-5" style="background-color: #111" id="mw">
+      <div class="py-5">
+        <div class="container">
+          <h2 class="project-title text-center">Musicians Worship</h2>
+          <h4 class="text-center opacity-75">
+            A community for church musicians
+          </h4>
+          <div class="text-center d-flex justify-content-center">
             <div
-              class="d-flex gap-3 flex-wrap justify-content-center image-gallery"
+              class="d-flex gap-3 flex-wrap project-skills project-skills-full"
             >
-              <div>
-                <img class="shadow-sm" src="assets/capstone/home.png" />
-              </div>
-              <!--<div><img class="shadow-sm" src="assets/capstone/dashboard.png"></div>
-              <div><img class="shadow-sm" src="assets/capstone/login.png"></div>-->
-              <div>
-                <img class="shadow-sm" src="assets/capstone/predict.png" />
-              </div>
-              <!--<div><img class="shadow-sm" src="assets/capstone/predict_multiple.png"></div>
-              <div><img class="shadow-sm" src="assets/capstone/view_tickets.png"></div>-->
+              <div>C#</div>
+              <div>Microsoft .Net</div>
+              <div>Angular</div>
+              <div>Entity Framework</div>
+              <div>SignalR</div>
             </div>
           </div>
         </div>
+        <div
+          style="
+            background-image: url('assets/home/mwscreeshotscrop.png');
+            height: 330px;
+            background-size: cover;
+          "
+          class="my-5"
+        ></div>
+        <div class="container">
+          <div class="row">
+            <div class="col-12 col-md-8">
+              <p>
+                In my spare time, I worked on a personal project that combined
+                my passion for music and software development. I aimed to create
+                a website to manage chord charts and resources for songs, and to
+                establish a community for sharing these resources with the
+                world. The site included features such as sending friend
+                requests, creating groups for sharing ideas, adding songs,
+                creating playlists, and other tools useful for church musicians.
+                In one version, I even added a real-time instant messenger for
+                users to communicate. In addition to the site, I created a help
+                section with documentation. The search had a simplistic search
+                correction to offer "did you mean" functionality. I rewrote the
+                project 2-3 times to improve the code, and initially started in
+                Angular.JS before rewriting the frontend in Angular. I still
+                hope to publish this site, as I believe it could greatly improve
+                the workflow for church music teams.
+              </p>
+            </div>
+            <div class="col-12 col-md-4">
+              <h4>Tech Used In Project</h4>
+              <p>
+                I utilized .Net with Entity Framework for the backend. For the
+                frontend, I used Angular. The realtime chat was written using
+                SignalR.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
 
-        <div class="row mt-5">
-          <div class="col-12">
-            <h3 class="mb-1">Worship Musicians (Personal Project)</h3>
-            <div class="flex gap-3 mb-2">
-              <div class="badge bg-light text-dark">C#</div>
-              <div class="badge bg-light text-dark">.Net</div>
-              <div class="badge bg-light text-dark">Angular</div>
-              <div class="badge bg-light text-dark">Entity Framework</div>
-              <div class="badge bg-light text-dark">SignalR</div>
-            </div>
-            <p>
-              In my spare time, I worked on a personal project that combined my
-              passion for music and software development. I aimed to create a
-              website to manage chord charts and resources for songs, and to
-              establish a community for sharing these resources with the world.
-              The site included features such as sending friend requests,
-              creating groups for sharing ideas, adding songs, creating
-              playlists, and other tools useful for church musicians. In one
-              version, I even added a real-time instant messenger for users to
-              communicate. In addition to the site, I created a help section
-              with documentation. The search had a simplistic search correction
-              to offer "did you mean" functionality. I rewrote the project 2-3
-              times to improve the code, and initially started in Angular.JS
-              before rewriting the frontend in Angular. I still hope to publish
-              this site, as I believe it could greatly improve the workflow for
-              church music teams.
-            </p>
-            <h5>For the Nerds</h5>
-            <p>
-              I utilized .Net with Entity Framework for the backend. For the
-              frontend, I used Angular.
-            </p>
-          </div>
+    <div class="container mt-5" id="penguinjump">
+      <h2 class="project-title text-center">Penguin Jump</h2>
+      <h4 class="text-muted text-center">An infinite penguin runner</h4>
+      <div class="text-center d-flex justify-content-center"></div>
+      <div class="text-center d-flex justify-content-center">
+        <div class="d-flex gap-3 flex-wrap project-skills project-skills-full">
+          <div>C#</div>
+          <div>Unity</div>
+          <div>Game Design</div>
         </div>
-        <div class="row">
-          <div class="col-12">
-            <div
-              class="d-flex gap-3 flex-wrap justify-content-center image-gallery"
-            >
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw1.PNG" />
-              </div>
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw2.PNG" />
-              </div>
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw3.PNG" />
-              </div>
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw4.PNG" />
-              </div>
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw5.PNG" />
-              </div>
-              <div>
-                <img class="shadow-sm" src="assets/mw/mw6.PNG" />
-              </div>
-            </div>
-          </div>
+      </div>
+      <div class="d-flex justify-content-center">
+        <div class="penguinjump-container my-3">
+          <div
+            style="background-image: url('assets/penguinjump.gif')"
+            class="penguinjump-gif"
+            alt="A penguin jumping while running"
+          ></div>
+          <img
+            src="assets/home/iphone14.png"
+            class="penguinjump-phone"
+            alt="a phone"
+          />
         </div>
-
+      </div>
       <div class="row mt-5">
-        <div class="col-12">
-          <h3 class="mb-1">Penguin Jump (Personal Project)</h3>
-          <div class="flex gap-3 mb-2">
-            <div class="badge bg-light text-dark">C#</div>
-            <div class="badge bg-light text-dark">Unity</div>
-          </div>
+        <div class="col-12 col-md-8">
           <p>
             In my spare time, I developed an infinite runner game called
             "Penguin Jump." This engaging game features a variety of power-ups
@@ -325,24 +646,15 @@
             it. The development process allowed me to hone my skills in game
             design and programming.
           </p>
-          <h5>For the Nerds</h5>
+        </div>
+        <div class="col-12 col-md-4">
+          <h4>Tech Used In Project</h4>
           <p>I utilized Unity's game engine and C# for the game logic.</p>
         </div>
       </div>
-      <div class="row">
-        <div class="col-12">
-          <div
-            class="d-flex gap-3 flex-wrap justify-content-center image-gallery"
-          >
-            <div>
-              <img class="shadow-sm" src="assets/penguinjump.gif" />
-            </div>
-          </div>
-        </div>
-      </div>
-      </div>
-
-
+    </div>
+    <div class="py-3"></div>
+    <div class="container my-5">
       <div class="row my-5">
         <div class="col-12 col-md-6">
           <div class="card border-primary">
@@ -356,7 +668,7 @@
             </div>
           </div>
         </div>
-        <div class="col-12 col-md-6 pt-3 pt-md-0">
+        <div class="col-12 col-md-6 pt-3 pt-md-0" id="education">
           <div class="card">
             <div class="card-body">
               <h2 class="fs-6" id="Education">Education</h2>
@@ -380,8 +692,8 @@
       <div class="row">
         <div class="col-12 col-md-7">
           <div>
-            <h2 id="Interests">Interests</h2>
-            <div class="d-flex gap-3 my-2">
+            <h2 id="interests">Interests</h2>
+            <div class="d-flex gap-3 my-2 flex-wrap">
               <div class="badge text-dark bg-light">Guitar</div>
               <div class="badge text-dark bg-light">Drums</div>
               <div class="badge text-dark bg-light">Piano</div>
@@ -471,12 +783,12 @@
         </div>
       </div>
     </div>
-    <div class="my-5 mb-0 py-5 bg-dark text-white text-center">
+    <div class="my-5 mb-0 py-5 bg-primary text-white text-center">
       <h2>Connect On LinkedIn</h2>
       <div class="mt-3">
         <a
           href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
-          class="btn btn-primary btn-lg mw-100"
+          class="btn btn-light btn-lg mw-100"
           style="width: 390px"
           >View Profile</a
         >
