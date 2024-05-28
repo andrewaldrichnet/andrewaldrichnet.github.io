@@ -1,0 +1,301 @@
+body, .btn {
+    font-size: 1.3rem;
+}
+
+.bg-primary {
+  background-color: #181c34 !important;
+}
+
+.image-gallery > div {
+  flex-basis: 350px;
+}
+
+.image-gallery div img {
+  object-fit: cover;
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+  border-radius: 5px;
+}
+
+@media all and (max-width: 767px) {
+  .image-gallery > div {
+    flex-basis: 100%;
+  }
+}
+
+.certificate-card .certificate-card-content {
+  height: 300px;
+}
+
+.certificate-card {
+  width: 330px;
+  max-width: 100%;
+  position: relative;
+  z-index: 1;
+}
+
+.section-title {
+  font-size: 36px;
+  margin: 30px 0;
+  font-weight: bold;
+}
+
+.project-title {
+  font-size: 44px;
+  font-weight: bold;
+}
+.project-skills {
+  font-weight: bold;
+  margin: 12px 0;
+  font-size: 20px;
+  max-width: 100%;
+}
+
+.project-skills-full {
+  justify-content: center;
+}
+.penguinjump-gif {
+  position: absolute;
+  top: 9px;
+  left: 8px;
+  background-size: cover;
+  background-position: center;
+  border-radius: 8px;
+  right: 8px;
+  bottom: 8px;
+}
+.penguinjump-container {
+  position: relative;
+  width: 350px;
+  height: 172px;
+  overflow: hidden;
+}
+.penguinjump-phone {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  height: auto;
+}
+
+.projects-header {
+  background-image: url("assets/home/projectsbg.svg");
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.code-bg {
+  background-image: url("assets/home/codebgmiddle.svg");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: cover;
+  position: relative;
+  overflow: hidden;
+}
+.code-bg::before {
+  background-image: url("assets/home/codebgtop.svg");
+  content: "";
+  background-position: top right;
+  background-size: contain;
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  z-index: 0;
+  max-width: 33.3%;
+}
+.code-bg::after {
+  background-image: url("assets/home/greenwave.svg");
+  content: "";
+  background-position: bottom;
+  background-size: cover;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  background-repeat: no-repeat;
+  z-index: 0;
+}
+
+.currentposition-container {
+  background-image: url("assets/home/codegraphic.svg");
+  background-position-x: 100%;
+  background-size: contain;
+  background-repeat: no-repeat;
+}
+
+.currentposition-card {
+  max-width: 600px;
+  margin: 0;
+}
+
+.currentposition-title {
+  font-size: 72px;
+  font-weight: bold;
+  line-height: 120%;
+}
+
+.currentposition-subtitle {
+  font-size: 54px;
+  margin-top: 24px;
+  line-height: 105%;
+}
+
+.connect-cta-container {
+  background-image: url("assets/home/connectctabg.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  padding: 86px 24px;
+}
+
+.connect-cta-title {
+  font-size: 34px;
+  font-weight: bold;
+}
+
+
+
+.connect-cta-inner-container {
+  margin: auto;
+  text-align: center;
+}
+
+footer .footer-link {
+    color: #fff;
+    padding: 12px 8px;
+    text-decoration: none;
+    display: inline-block;
+}
+
+footer .footer-link:hover, footer .footer-link:focus {
+    color: #ccc;
+}
+
+@media all and (max-width: 1300px) {
+  .currentposition-container {
+    background-position-x: 120%;
+  }
+}
+
+@media all and (max-width: 1200px) {
+  .currentposition-container {
+    background-size: 400px;
+    background-position-y: 60%;
+  }
+}
+
+@media all and (max-width: 991px) {
+  .currentposition-container {
+    background-image: none;
+  }
+
+  .currentposition-card {
+    margin: auto;
+  }
+}
+
+@media all and (max-width: 767px) {
+  .currentposition-title {
+    font-size: 40px;
+  }
+  .currentposition-img {
+    max-width: 145px !important;
+  }
+
+  .currentposition-subtitle {
+    font-size: 32px;
+    margin-top: 12px;
+  }
+}
+
+@media all and (max-width: 991px) {
+  .certificate-card img {
+    max-width: 70px;
+  }
+  .certificate-card {
+    width: 100%;
+    max-width: 300px;
+    margin: 12px auto;
+    box-shadow: none;
+    background-color: #fff !important;
+    margin-top: 12px !important;
+    box-shadow: none !important;
+    border: #eee solid 1px;
+  }
+  .certificate-card .certificate-card-content {
+    height: auto;
+  }
+
+  .code-bg {
+    background-image: none;
+    overflow: hidden;
+  }
+}
+
+@media all and (max-width: 500px) {
+  .projects-cta-section .btn {
+    width: 100%;
+  }
+  .projects-cta-section {
+    max-width: 280px;
+    margin: auto;
+  }
+}
+
+@media all and (min-width: 768px) {
+    .connect-cta-inner-container {
+        max-width: 850px;
+        text-align: start;
+      }
+}
+
+@media all and (min-width: 992px) {
+  .side-certificate {
+    margin-top: 64%;
+  }
+  .main-title {
+    font-size: 64px;
+  }
+
+  .project-title {
+    font-size: 72px;
+  }
+
+  .section-title {
+    font-size: 54px;
+    margin: 60px 0;
+  }
+
+  .project-skills {
+    max-width: 250px;
+  }
+
+  .project-skills-full {
+    max-width: 100%;
+  }
+
+  .connect-cta-title {
+    font-size: 72px;
+  }
+  
+  .connect-cta-subtitle {
+    font-size: 28px;
+  }
+}
+
+@media all and (min-width: 1200px) {
+  .connect-cta-inner-container {
+    padding: 98px 0;
+    max-width: 850px;
+  }
+
+  .main-title {
+    font-size: 72px;
+  }
+}

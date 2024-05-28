@@ -11,247 +11,7 @@
       crossorigin="anonymous"
     />
 
-    <style>
-      .bg-primary {
-        background-color: #181c34 !important;
-      }
-
-      .image-gallery > div {
-        flex-basis: 350px;
-      }
-
-      .image-gallery div img {
-        object-fit: cover;
-        max-width: 100%;
-        height: auto;
-        vertical-align: middle;
-        border-radius: 5px;
-      }
-
-      @media all and (max-width: 767px) {
-        .image-gallery > div {
-          flex-basis: 100%;
-        }
-      }
-
-      .certificate-card .certificate-card-content {
-        height: 300px;
-      }
-
-      .certificate-card {
-        width: 330px;
-        max-width: 100%;
-        position: relative;
-        z-index: 1;
-      }
-
-      .section-title {
-        font-size: 36px;
-        margin: 30px 0;
-        font-weight: bold;
-      }
-
-      .project-title {
-        font-size: 44px;
-        font-weight: bold;
-      }
-      .project-skills {
-        font-weight: bold;
-        margin: 12px 0;
-        font-size: 20px;
-        max-width: 100%;
-      }
-
-      .project-skills-full {
-        justify-content: center;
-      }
-      .penguinjump-gif {
-        position: absolute;
-        top: 9px;
-        left: 8px;
-        background-size: cover;
-        background-position: center;
-        border-radius: 8px;
-        right: 8px;
-        bottom: 8px;
-      }
-      .penguinjump-container {
-        position: relative;
-        width: 350px;
-        height: 172px;
-        overflow: hidden;
-      }
-      .penguinjump-phone {
-        position: absolute;
-        left: 0;
-        right: 0;
-        width: 100%;
-        height: auto;
-      }
-
-      .projects-header {
-        background-image: url("assets/home/projectsbg.svg");
-        background-position: center;
-        background-size: contain;
-        background-repeat: no-repeat;
-      }
-
-      @media all and (min-width: 992px) {
-        .side-certificate {
-          margin-top: 64%;
-        }
-        .main-title {
-          font-size: 64px;
-        }
-
-        .project-title {
-          font-size: 72px;
-        }
-
-        .section-title {
-          font-size: 54px;
-          margin: 60px 0;
-        }
-
-        .project-skills {
-          max-width: 250px;
-        }
-
-        .project-skills-full {
-          max-width: 100%;
-        }
-      }
-
-      .code-bg {
-        background-image: url("assets/home/codebgmiddle.svg");
-        background-size: cover;
-        background-repeat: no-repeat;
-        background-position: cover;
-        position: relative;
-      }
-      .code-bg::before {
-        background-image: url("assets/home/codebgtop.svg");
-        content: "";
-        background-position: top right;
-        background-size: contain;
-        position: absolute;
-        top: -1px;
-        right: -1px;
-        height: 100%;
-        width: 100%;
-        background-repeat: no-repeat;
-        z-index: 0;
-        max-width: 33.3%;
-      }
-      .code-bg::after {
-        background-image: url("assets/home/greenwave.svg");
-        content: "";
-        background-position: bottom;
-        background-size: cover;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        background-repeat: no-repeat;
-        z-index: 0;
-      }
-
-      @media all and (max-width: 991px) {
-        .certificate-card img {
-          max-width: 70px;
-        }
-        .certificate-card {
-          width: 100%;
-          max-width: 300px;
-          margin: 12px auto;
-          box-shadow: none;
-          background-color: #fff !important;
-          margin-top: 12px !important;
-          box-shadow: none !important;
-          border: #eee solid 1px;
-        }
-        .certificate-card .certificate-card-content {
-          height: auto;
-        }
-
-        .code-bg {
-          background-image: none;
-          overflow: hidden;
-        }
-      }
-
-      @media all and (max-width: 500px) {
-        .projects-cta-section .btn {
-          width: 100%;
-        }
-        .projects-cta-section {
-          max-width: 280px;
-          margin: auto;
-        }
-      }
-
-      .currentposition-container {
-        background-image: url("assets/home/codegraphic.svg");
-        background-position-x: 100%;
-        background-size: contain;
-        background-repeat: no-repeat;
-      }
-
-      .currentposition-card {
-        max-width: 600px;
-        margin: 0;
-      }
-
-      .currentposition-title {
-        font-size: 72px;
-        font-weight: bold;
-        line-height: 120%;
-      }
-
-      .currentposition-subtitle {
-        font-size: 54px;
-        margin-top: 24px;
-        line-height: 105%;
-      }
-
-      @media all and (max-width: 1300px) {
-        .currentposition-container {
-          background-position-x: 120%;
-        }
-      }
-
-      @media all and (max-width: 1200px) {
-        .currentposition-container {
-          background-size: 400px;
-          background-position-y: 60%;
-        }
-      }
-
-      @media all and (max-width: 991px) {
-        .currentposition-container {
-          background-image: none;
-        }
-
-        .currentposition-card {
-          margin: auto;
-        }
-      }
-
-      @media all and (max-width: 767px) {
-        .currentposition-title {
-          font-size: 40px;
-        }
-        .currentposition-img {
-          max-width: 145px !important;
-        }
-
-        .currentposition-subtitle {
-          font-size: 32px;
-          margin-top: 12px;
-        }
-      }
-    </style>
+    <link href="site.css" rel="stylesheet" />
   </head>
 
   <body>
@@ -280,9 +40,9 @@
                   <span class="navbar-toggler-icon"></span>
                 </button>
                 <div class="collapse navbar-collapse" id="navbarNavAltMarkup">
-                  <div class="navbar-nav ms-auto gap-4">
+                  <div class="navbar-nav ms-auto gap-5">
                     <a
-                      class="nav-link active"
+                      class="nav-link active mt-3 mt-lg-0"
                       aria-current="page"
                       href="#projects-overview"
                       >Projects</a
@@ -306,7 +66,7 @@
             <div
               class="col-12 col-lg-6 order-1 order-lg-0 text-center text-lg-start"
             >
-              <h2 style="font-size: 54px" class="fw-light d-none d-lg-block">
+              <h2 style="font-size: 36px" class="fw-light d-none d-lg-block">
                 Andrew Aldrich
               </h2>
               <h1 class="fw-bold my-3 main-title">Full Stack Engineer</h1>
@@ -362,7 +122,7 @@
       </div>
     </div>
     <div class="code-bg py-lg-5">
-      <div class="py-5 container">
+      <div class="py-5 container" id="certificates">
         <h2 class="text-center section-title">Certificates</h2>
         <div class="row my-5 certificate-card-row">
           <div class="col-12 col-lg-4 justify-content-center d-flex">
@@ -381,7 +141,7 @@
           <div class="col-12 col-lg-4 justify-content-center d-flex">
             <div class="mw-100">
               <div
-                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center text-center bg-light"
+                class="shadow-lg rounded rounded-3 certificate-card d-flex flex-column align-items-center text-center bg-light mb-4 mb-lg-0"
               >
                 <div class="py-2 certificate-card-content px-5">
                   <img src="assets/home/comptialogo.png" alt="CompTIA" />
@@ -758,18 +518,24 @@
           >
             <div class="px-lg-1 py-lg-3 d-flex flex-column gap-1">
               <div class="opacity-75">2019 - 2020</div>
-              <div class="fw-bold fs-4" style="line-height: 120%;">Westen Governors University</div>
+              <div class="fw-bold fs-4" style="line-height: 120%">
+                Westen Governors University
+              </div>
               <div class="fw-bold fs-1">Bachelor of Science</div>
               <div>in Computer Science</div>
             </div>
           </div>
         </div>
         <div class="col-12 col-lg-5 mt-3 mt-lg-0">
-          <div class="rounded shadow bg-white py-5 px-3 px-lg-5 h-100 ms-lg-4 d-flex align-items-center">
+          <div
+            class="rounded shadow bg-white py-5 px-3 px-lg-5 h-100 ms-lg-4 d-flex align-items-center"
+          >
             <div class="px-lg-1 py-lg-3 d-flex flex-column gap-1">
               <div class="opacity-75">2016 - 2019</div>
               <div class="fw-bold fs-4">John A Logan College</div>
-              <div class="fw-bold fs-1" style="line-height: 120%;">Associate of Science</div>
+              <div class="fw-bold fs-1" style="line-height: 120%">
+                Associate of Science
+              </div>
               <div>in Computer Science</div>
             </div>
           </div>
@@ -828,8 +594,6 @@
     </div>
 
     <div class="container my-3">
-      
-
       <div class="row my-5">
         <div class="col-12">
           <h3>AYC Benelux</h3>
@@ -881,23 +645,120 @@
         </div>
       </div>
     </div>
-    <div class="my-5 mb-0 py-5 bg-primary text-white text-center">
-      <h2>Connect on LinkedIn</h2>
-      <div class="mt-3">
-        <a
-          href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
-          class="btn btn-light btn-lg mw-100"
-          style="width: 390px"
-          >View Profile</a
+    <div class="connect-cta-container text-light">
+      <div class="container">
+        <div
+          class="d-flex justify-content-between connect-cta-inner-container gap-2"
         >
+          <div>
+            <h2 class="connect-cta-title">Ready to Connect?</h2>
+            <div class="connect-cta-subtitle">
+              Whether you're looking to hire, collaborate, or just want to say
+              hello, I'd love to hear from you.
+            </div>
+            <a
+              class="btn btn-light btn-lg cta-btn mt-4"
+              href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+              target="_blank"
+              >Connect on LinkedIn</a
+            >
+          </div>
+          <div class="d-none d-md-block">
+            <img
+              src="assets/home/andrewaldrichmobile.png"
+              alt="A picture of Andrew"
+            />
+          </div>
+        </div>
       </div>
     </div>
-    <footer class="bg-black text-light py-3 px-3">
-      &copy;
-      <script>
-        document.write(new Date().getFullYear());
-      </script>
-      Andrew Aldrich
+
+    <footer class="bg-black text-light px-3 px-md-5">
+      <div class="pt-5">
+        <div class="row">
+          <div class="col-6 col-md-4">
+            <div>
+              <a href="#" class="fs-5 fw-bold footer-link">Andrew Aldrich</a>
+            </div>
+            <ul class="list-unstyled">
+              <li>
+                <a href="#projects-overview" class="footer-link">Projects</a>
+              </li>
+              <li><a href="#education" class="footer-link">Education</a></li>
+              <li><a href="#interests" class="footer-link">Interests</a></li>
+              <li>
+                <a
+                  href="https://www.linkedin.com/in/andrew-aldrich-8223ba1b3"
+                  target="_blank"
+                  class="btn btn-light mt-3"
+                  >Connect on LinkedIn</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="col-6 col-md-4">
+            <div>
+              <a href="#projects-overview" class="fs-5 fw-bold footer-link"
+                >Projects</a
+              >
+            </div>
+            <ul class="list-unstyled">
+              <li>
+                <a href="#trt" class="footer-link">Team Reporting Tool</a>
+              </li>
+              <li>
+                <a href="#capstone" class="footer-link"
+                  >AI/ML Support Ticket Urgency Predictor
+                </a>
+              </li>
+              <li><a href="#mw" class="footer-link">Musicians Worship</a></li>
+              <li>
+                <a href="#penguinjump" class="footer-link">Penguin Jump</a>
+              </li>
+            </ul>
+          </div>
+          <div
+            class="col-4 d-none d-md-block"
+          >
+            <div>
+              <div>
+                <a href="#certificates" class="fs-5 fw-bold footer-link text-center"
+                  >Certificates</a
+                >
+              </div>
+              <ul class="list-unstyled w-100">
+                <li>
+                  <a href="#certificates" class="footer-link"
+                    >Site Development Associate</a
+                  >
+                </li>
+                <li>
+                  <a href="#certificates" class="footer-link"
+                    >CompTIA Project+
+                  </a>
+                </li>
+                <li>
+                  <a href="#certificates" class="footer-link"
+                    >Oracle Database SQL Certified</a
+                  >
+                </li>
+                <li>
+                  <a href="#certificates" class="footer-link"
+                    >ITL Foundation Level</a
+                  >
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="py-3">
+        &copy;
+        <script>
+          document.write(new Date().getFullYear());
+        </script>
+        Andrew Aldrich | All rights reserved
+      </div>
     </footer>
     <script
       src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"
