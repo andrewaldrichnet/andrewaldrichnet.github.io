@@ -171,6 +171,7 @@ footer .footer-link {
     padding: 12px 8px;
     text-decoration: none;
     display: inline-block;
+    width: 100%;
 }
 
 footer .footer-link:hover, footer .footer-link:focus {
