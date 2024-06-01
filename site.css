@@ -178,6 +178,14 @@ footer .footer-link:hover, footer .footer-link:focus {
     color: #ccc;
 }
 
+
+.white-wave-bottom {
+  background-image: url('assets/home/whitecurve.svg');
+  background-position: bottom;
+  background-size: content;
+  background-repeat: no-repeat;
+}
+
 @media all and (max-width: 1300px) {
   .currentposition-container {
     background-position-x: 120%;
