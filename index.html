@@ -10,6 +10,10 @@
       integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi"
       crossorigin="anonymous"
     />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/flickity/2.3.0/flickity.min.css"
+    />
 
     <link href="site.css" rel="stylesheet" />
   </head>
@@ -197,9 +201,15 @@
             >
               <div class="d-flex flex-column gap-5 px-3">
                 <div>
-                  <h5 class="fw-bold">Generative AI Dynamic Web Page Generator</h5>
-                  <h6 class="opacity-75">Using AI to create content and designs </h6>
-                  <a class="text-light btn btn-link px-0" href="#aiwebpagegenerator"
+                  <h5 class="fw-bold">
+                    Generative AI Dynamic Web Page Generator
+                  </h5>
+                  <h6 class="opacity-75">
+                    Using AI to create content and designs
+                  </h6>
+                  <a
+                    class="text-light btn btn-link px-0"
+                    href="#aiwebpagegenerator"
                     >View Project</a
                   >
                 </div>
@@ -259,14 +269,134 @@
         </div>
       </div>
     </div>
-    <div class="py-5" id="aiwebpagegenerator">
+    <div class="py-5" id="livebulletin">
       <div class="container mt-3" id="projects">
+        <div class="mb-3">
+          <div>
+            <img src="assets/home/LiveBulletin.png" class="rounded mw-100" alt="LiveBulletin showing using azure, react, mongo, and other frameworks" />
+          </div>
+        </div>
         <div class="row">
           <div
-          class="col-12 col-lg-7 project-title-section d-flex gap-1 flex-column ps-lg-5 order-lg-1"
-        >
-            <h2 class="project-title">Generative AI Dynamic Web Page Generator</h2>
-            <h4 class="text-muted">Using AI to create content and designs </h4>
+            class="col-12 col-md-10 offset-md-1 col-lg-8 offset-lg-2 col-xl-6 offset-xl-3"
+          >
+            <div class="text-center">
+              <h2 class="project-title">LiveBulletin</h2>
+              <h4 class="text-muted">
+                Virtual bulletin board to organize messages, events, and
+                announcements
+              </h4>
+              <div
+                class="d-flex gap-3 flex-wrap project-skills project-skills-full"
+              >
+                <div>C#</div>
+                <div>React</div>
+                <div>.NET Core</div>
+                <div>Azure</div>
+                <div>Docker Containers</div>
+                <div>EF Core</div>
+                <div>MongoDB</div>
+                <div>GitHub Actions</div>
+                <div>Firebase</div>
+                <div>Bootstrap CSS</div>
+                <div>TypeScript</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <div class="col-12 col-md-8">
+            <p>
+              Most everyone has seen a bulletin board of some fashion. If you
+              attend a church they might have a list of events and announcements
+              posted. A school might have a board to inform people about school
+              plays and other programs. These boards usually get overlooked or
+              go unnoticed. I set out to create a simple virtual solution to
+              help everyone get connected and stay informed.
+            </p>
+          </div>
+          <div class="col-12 col-md-4">
+            <h4>Tech Used In Project</h4>
+            <p>
+              I utilized .NET Core, C#, EF Core, and mongo db. Using EF Core I
+              was able to easily connect to MongoDB to store everything needed
+              for the app. On the frontend, I used React and Bootstrap css.
+            </p>
+          </div>
+        </div>
+        <div>
+          <h4>Hosting the project</h4>
+          <p>
+            I wanted to explore cloud development and how I could publish this
+            to the world. Through Docker Containers, I published the .NET Core
+            app to Azure using web containers. Using web containers allows me to
+            horizontally scale the app if it ever takes off. I decided to use
+            MongoDB for the database as it offered a simple way to host it via
+            MongoDB Atlas. I deployed the Azure container and connected it to
+            the cloud DB. I then used Firebase to host the frontend. Google
+            Firebase makes it easy to publish single-page applications and
+            redirect all the traffic to index.html.
+          </p>
+          <p>
+            After setting up the back-end and front-end I went a step further
+            and created a CI/CD pipeline using GitHub actions. With a simple
+            commit to the main branch, I’m able to update and deploy the latest
+            version of the app.
+          </p>
+        </div>
+
+        <div>
+          <div class="carousel" id="myCarousel">
+            <div class="carousel-cell">
+              <div class="px-2">
+                <img
+                  src="assets/home/LiveBulletin1.png"
+                  class="rounded"
+                  alt="virtual bulletin board to organize messages, events, and announcements"
+                />
+              </div>
+            </div>
+            <div class="carousel-cell">
+              <div class="px-2">
+                <img
+                  src="assets/home/LiveBulletin2.png"
+                  class="rounded"
+                  alt="TEAM COLLABORATION CONFIGURABLE SECURITY ACCESS"
+                />
+              </div>
+            </div>
+            <div class="carousel-cell">
+              <div class="px-2">
+                <img
+                  src="assets/home/LiveBulletin3.png"
+                  class="rounded"
+                  alt="ACCESS FROM ANYWHERE WITH MOBILE FRIENDLY DESIGN"
+                />
+              </div>
+            </div>
+            <div class="carousel-cell">
+              <div class="px-2">
+                <img
+                  src="assets/home/LiveBulletin4.png"
+                  class="rounded"
+                  alt="USE FOR SCHOOLS OR CHURCHES"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div?>
+    </div>
+    <div class="py-5" id="aiwebpagegenerator">
+      <div class="container mt-3">
+        <div class="row">
+          <div
+            class="col-12 col-lg-7 project-title-section d-flex gap-1 flex-column ps-lg-5 order-lg-1"
+          >
+            <h2 class="project-title">
+              Generative AI Dynamic Web Page Generator
+            </h2>
+            <h4 class="text-muted">Using AI to create content and designs</h4>
             <div class="d-flex gap-3 flex-wrap project-skills">
               <div>HTML</div>
               <div>CSS</div>
@@ -275,34 +405,41 @@
               <div>OpenAI</div>
               <div>ChatGPT 4o Mini</div>
             </div>
-
-      </div>
-
-      <div class="col-12 col-lg-5">
-        <img src="assets/home/aiwebpagegenerator.gif" 
-        width="800"
-        class="mw-100"
-        alt="AI Web page generator showing how entering a topic and description you get a stylized web page." />
-      </div>
-          
-
-        </div>
-
-      <div class="container mt-3">
-        <div class="row">
-          <div class="col-12 col-md-8">
-            <p>
-              To deepen my understanding of AI, I developed a project to generate web pages based on a prompt. While generative AI could be used to generate HTML, I wanted to take a slightly different approach. Instead I fed into the AI model sections that represented HTML code. Each section defined what it was and what inputs were needed. I then allowed the model to choose the best sections and generate inputs for each section. 
-            </p>
           </div>
-          <div class="col-12 col-md-4">
-            <h4>Tech Used In Project</h4>
-            <p>
-              For this proof of concept AI project it was written in JavaScript. I utilized the ChatGPT 4o mini model from OpenAI as the AI model.
-            </p>
+
+          <div class="col-12 col-lg-5">
+            <img
+              src="assets/home/aiwebpagegenerator.gif"
+              width="800"
+              class="mw-100"
+              alt="AI Web page generator showing how entering a topic and description you get a stylized web page."
+            />
           </div>
         </div>
-      </div>
+
+        <div class="container mt-3">
+          <div class="row">
+            <div class="col-12 col-md-8">
+              <p>
+                To deepen my understanding of AI, I developed a project to
+                generate web pages based on a prompt. While generative AI could
+                be used to generate HTML, I wanted to take a slightly different
+                approach. Instead I fed into the AI model sections that
+                represented HTML code. Each section defined what it was and what
+                inputs were needed. I then allowed the model to choose the best
+                sections and generate inputs for each section.
+              </p>
+            </div>
+            <div class="col-12 col-md-4">
+              <h4>Tech Used In Project</h4>
+              <p>
+                For this proof of concept AI project it was written in
+                JavaScript. I utilized the ChatGPT 4o mini model from OpenAI as
+                the AI model.
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="py-5" id="trt">
@@ -775,7 +912,9 @@
             </div>
             <ul class="list-unstyled">
               <li>
-                <a href="#aiwebpagegenerator" class="footer-link">Generative AI Dynamic Web Page Generator</a>
+                <a href="#aiwebpagegenerator" class="footer-link"
+                  >Generative AI Dynamic Web Page Generator</a
+                >
               </li>
               <li>
                 <a href="#trt" class="footer-link">Team Reporting Tool</a>
@@ -825,7 +964,7 @@
         </div>
       </div>
       <div class="py-3">
-        <small style="font-size: .6em;">
+        <small style="font-size: 0.6em">
           &copy;
           <script>
             document.write(new Date().getFullYear());
@@ -844,5 +983,22 @@
       integrity="sha384-IDwe1+LCz02ROU9k972gdyvl+AESN10+x7tBKgc9I5HFtuNz0wWnPclzo6p9vxnk"
       crossorigin="anonymous"
     ></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/flickity/2.3.0/flickity.pkgd.min.js"></script>
+
+    <script>
+      // Initialize Flickity
+      document.addEventListener("DOMContentLoaded", () => {
+        const elem = document.querySelector("#myCarousel");
+        new Flickity(elem, {
+          cellAlign: "center",
+          contain: true,
+          wrapAround: true,
+          autoPlay: 3000, // Auto play every 3 seconds
+          prevNextButtons: true,
+          pageDots: true,
+        });
+      });
+    </script>
   </body>
 </html>

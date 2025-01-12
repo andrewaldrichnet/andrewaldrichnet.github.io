@@ -308,3 +308,19 @@ footer .footer-link:hover, footer .footer-link:focus {
     font-size: 72px;
   }
 }
+
+
+
+/* full width cells by default */
+.carousel-cell {
+  width: 100%;
+}
+
+.carousel-cell img {
+  width: 100%;
+}
+
+@media all and ( min-width: 768px ) {
+  /* half-width cells for larger devices */
+  .carousel-cell { width: 50%; }
+}
