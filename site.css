@@ -324,3 +324,7 @@ footer .footer-link:hover, footer .footer-link:focus {
   /* half-width cells for larger devices */
   .carousel-cell { width: 50%; }
 }
+
+.flickity-viewport {
+  min-height: 300px; /* sometimes it seems to load funny */
+}
