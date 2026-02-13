@@ -220,6 +220,31 @@
       margin: 10px 0;
     }
 
+    .info-message {
+      background: #667eea;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+    }
+
+    .joke-message {
+      background: #764ba2;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+      font-style: italic;
+    }
+
+    .loading-message {
+      background: rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+    }
+
     @media (max-width: 768px) {
       .message-content {
         max-width: 85%;
@@ -249,14 +274,10 @@
     </div>
 
     <div class="messages-container" id="messagesContainer">
+      <!-- Initial welcome message -->
       <div class="message bot">
         <div class="message-content">
-          <strong>Hi there! 👋</strong><br>I'm an AI assistant trained on Andrew's information. Feel free to ask me anything about his projects, skills, experience, or interests. Some things you could ask:<br>
-          • <em>"What projects have you worked on?"</em><br>
-          • <em>"Tell me about your experience with React"</em><br>
-          • <em>"What's your background in AI and ML?"</em><br>
-          • <em>"Tell me about your music interests"</em><br><br>
-          <small><strong>Disclaimer:</strong> AI responses are generated automatically and may not be entirely accurate. These responses are provided for informational purposes and may not necessarily reflect Andrew's personal views, opinions, or professional recommendations. For official inquiries or critical information, please contact Andrew directly.</small>
+          <strong>Hi there! 👋</strong><br>Welcome to Ask Andrew! I'm loading up the AI model to chat with you...
         </div>
       </div>
     </div>
@@ -286,6 +307,7 @@
     let andrewData = null;
     let engine = null;
     let modelReady = false;
+    let browserSupported = true;
     const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
 
     const messagesContainer = document.getElementById('messagesContainer');
@@ -293,6 +315,131 @@
     const sendBtn = document.getElementById('sendBtn');
     const loadingStatus = document.getElementById('loadingStatus');
     const statusText = document.getElementById('statusText');
+
+    // Jokes and fun facts to show while loading
+    const jokesTips = [
+      "💡 Did you know? Andrew can play drums, piano, AND guitar!",
+      "😄 Why did the developer go broke? Because they used up all their cache!",
+      "🎵 Andrew is the music director at Johnston City UPC. Rock on! 🤘",
+      "😄 How many developers does it take to change a light bulb? None, that's a hardware problem!",
+      "🚀 Andrew is a Lead Engineer at Cordance, creating solutions to real-world business problems.",
+      "😄 Why do Java developers wear glasses? Because they don't C#!",
+      "📱 Andrew has built full-stack applications using React, Angular, TypeScript, and more!",
+      "😄 A SQL query walks into a bar, walks up to two tables and asks... 'Can I join you?'",
+      "🎬 Andrew has experience with video creation and photography!",
+      "😄 Why did the developer go to the beach? Because they wanted to surf the web!",
+      "🏆 Andrew holds multiple professional certifications in cloud and web technologies.",
+      "😄 How do you comfort a JavaScript bug? You console it!",
+      "🎓 Andrew holds degrees from Western Governors University and John A Logan College.",
+    ];
+
+    // Browser compatibility detection
+    function checkBrowserSupport() {
+      console.log('=== Checking Browser Support ===');
+      
+      // Check for required APIs
+      const hasWebGPU = !!(navigator.gpu);
+      const hasWebWorkers = typeof Worker !== 'undefined';
+      const hasIndexedDB = !!window.indexedDB;
+      const hasLocalStorage = !!window.localStorage;
+      const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+      const isEdge = /Edg/.test(navigator.userAgent);
+      const isFirefox = /Firefox/.test(navigator.userAgent);
+      
+      console.log('Browser capabilities:', {
+        hasWebGPU,
+        hasWebWorkers,
+        hasIndexedDB,
+        hasLocalStorage,
+        isChrome,
+        isEdge,
+        isFirefox,
+        userAgent: navigator.userAgent
+      });
+
+      // WebLLM requires WebGPU and WebWorkers
+      if (!hasWebGPU) {
+        console.warn('⚠️ WebGPU not supported');
+        return false;
+      }
+
+      if (!hasWebWorkers) {
+        console.warn('⚠️ Web Workers not supported');
+        return false;
+      }
+
+      if (!hasIndexedDB) {
+        console.warn('⚠️ IndexedDB not supported');
+        return false;
+      }
+
+      // Better browser support
+      if (!isChrome && !isEdge && !isFirefox) {
+        console.warn('⚠️ Browser may not be fully supported');
+        return false;
+      }
+
+      console.log('✓ Browser appears to support WebLLM');
+      return true;
+    }
+
+    // Show browser not supported message
+    function showBrowserNotSupportedMessage() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content error-message';
+      contentDiv.innerHTML = `
+        <strong>⚠️ Browser Not Fully Supported</strong><br>
+        This AI chat feature requires a modern browser with WebGPU support.<br><br>
+        <strong>Recommended browsers:</strong>
+        <ul style="margin: 10px 0; padding-left: 20px;">
+          <li><strong>Chrome/Chromium 113+</strong> (with GPU support enabled)</li>
+          <li><strong>Edge 113+</strong> (with GPU support enabled)</li>
+          <li><strong>Firefox 121+</strong> (with WebGPU enabled in about:config)</li>
+        </ul>
+        <strong>To enable WebGPU in Firefox:</strong> Visit <code>about:config</code> and set <code>dom.webgpu.enabled</code> to <code>true</code><br><br>
+        I can still help using knowledge-based responses, but the full AI experience requires WebGPU.
+      `;
+      
+      messageDiv.appendChild(contentDiv);
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Show joke/tip while loading
+    function showJokeTip() {
+      const randomJoke = jokesTips[Math.floor(Math.random() * jokesTips.length)];
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content joke-message';
+      contentDiv.innerHTML = randomJoke;
+      
+      messageDiv.appendChild(contentDiv);
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Show informational message
+    function showLoadingInfo() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content loading-message';
+      contentDiv.innerHTML = `
+        <strong>⏳ Still loading...</strong><br>
+        The AI model is being initialized for the first time (this takes about 1-2 minutes on first load).
+        I can answer questions right now using knowledge-based responses while we wait!
+      `;
+      
+      messageDiv.appendChild(contentDiv);
+      messagesContainer.appendChild(messageDiv);
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
 
     // Load Andrew's data
     async function loadAndrewData() {
@@ -305,18 +452,46 @@
         andrewData = await response.json();
         console.log('✓ Andrew data loaded successfully');
         console.log('Data keys available:', Object.keys(andrewData));
-        console.log('Full data object:', andrewData);
       } catch (error) {
         console.error('✗ Error loading Andrew data:', error);
-        showMessage('bot', 'Error loading knowledge base. Please refresh the page.');
+        showMessage('bot', '⚠️ Error loading knowledge base. Some responses may be limited. Please refresh the page.');
       }
     }
+
+    // Track loading start time and last message time
+    let loadingStartTime = null;
+    let lastMessageTime = 0;
+    const MESSAGE_INTERVAL = 45 * 1000; // Show a message every 45 seconds
 
     // Callback for model loading progress
     const initProgressCallback = (initProgress) => {
       const progress = Math.round((initProgress.progress * 100));
       statusText.textContent = `Loading AI model... ${progress}%`;
       console.log(`Progress: ${progress}%`);
+
+      // Initialize loading start time on first call
+      if (!loadingStartTime) {
+        loadingStartTime = Date.now();
+        lastMessageTime = 0;
+      }
+
+      // Show jokes/tips based on elapsed time (every 45 seconds)
+      const elapsedTime = Date.now() - loadingStartTime;
+      const timeSinceLastMessage = elapsedTime - lastMessageTime;
+
+      if (timeSinceLastMessage >= MESSAGE_INTERVAL) {
+        if (elapsedTime < MESSAGE_INTERVAL * 2) {
+          showJokeTip();
+        } else if (elapsedTime < MESSAGE_INTERVAL * 3) {
+          showLoadingInfo();
+        } else if (elapsedTime < MESSAGE_INTERVAL * 4) {
+          showJokeTip();
+        } else {
+          // Continue showing jokes every 45 seconds after the first 2+ minutes
+          showJokeTip();
+        }
+        lastMessageTime = elapsedTime;
+      }
     };
 
     // Initialize the AI model using WebLLM
@@ -324,29 +499,90 @@
       try {
         console.log('=== Initializing WebLLM Model ===');
         console.log('Selected model:', selectedModel);
+        
+        // Check browser support first
+        if (!checkBrowserSupport()) {
+          console.warn('Browser does not support required APIs for WebLLM');
+          browserSupported = false;
+          modelReady = false;
+          showBrowserNotSupportedMessage();
+          loadingStatus.style.display = 'block';
+          statusText.textContent = 'Using knowledge-based responses (your browser requires WebGPU support)';
+          return;
+        }
+
         loadingStatus.style.display = 'block';
         statusText.textContent = 'Loading AI model... 0%';
         
-        engine = await webllm.CreateMLCEngine(
-          selectedModel,
-          { initProgressCallback: initProgressCallback }
-        );
-        
-        modelReady = true;
-        console.log('✓ Model initialized successfully');
-        console.log('=== Model Initialization Complete ===');
-        loadingStatus.style.display = 'none';
-        showMessage('bot', '✓ AI model loaded! Ready to chat. Ask me about Andrew!');
+        try {
+          engine = await webllm.CreateMLCEngine(
+            selectedModel,
+            { initProgressCallback: initProgressCallback }
+          );
+          
+          modelReady = true;
+          console.log('✓ Model initialized successfully');
+          console.log('=== Model Initialization Complete ===');
+          loadingStatus.style.display = 'none';
+          
+          // Show completion message
+          const messageDiv = document.createElement('div');
+          messageDiv.className = 'message bot';
+          
+          const contentDiv = document.createElement('div');
+          contentDiv.className = 'message-content';
+          contentDiv.innerHTML = `
+            <strong>✓ Ready to chat!</strong><br>
+            The AI model has loaded successfully. You can now ask me anything about Andrew's projects, skills, experience, or interests.<br><br>
+            <strong>Example questions:</strong><br>
+            • <em>"What projects have you worked on?"</em><br>
+            • <em>"Tell me about your experience with React"</em><br>
+            • <em>"What's your background in AI and ML?"</em><br>
+            • <em>"Tell me about your music interests"</em><br><br>
+            <small><strong>Disclaimer:</strong> AI responses are generated automatically and may not be entirely accurate. These responses are provided for informational purposes and may not necessarily reflect Andrew's personal views, opinions, or professional recommendations. For official inquiries or critical information, please contact Andrew directly.</small>
+          `;
+          
+          messageDiv.appendChild(contentDiv);
+          messagesContainer.appendChild(messageDiv);
+          messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+          // Reset loading timer
+          loadingStartTime = null;
+          lastMessageTime = 0;
+        } catch (error) {
+          console.error('Model loading error:', error);
+          
+          // Check if it's a WebGPU-related error
+          if (error.message && (error.message.includes('WebGPU') || error.message.includes('GPU'))) {
+            browserSupported = false;
+            showBrowserNotSupportedMessage();
+          } else {
+            console.error('Error details:', {
+              name: error.name,
+              message: error.message,
+              stack: error.stack
+            });
+            showMessage('bot', '⚠️ AI model failed to load. Using knowledge-based responses instead. Try refreshing if you continue to have issues.');
+          }
+          
+          modelReady = false;
+          loadingStatus.style.display = 'block';
+          statusText.textContent = 'Using knowledge-based responses';
+
+          // Reset loading timer
+          loadingStartTime = null;
+          lastMessageTime = 0;
+        }
       } catch (error) {
-        console.error('✗ Error initializing model:', error);
-        console.error('Error details:', {
-          name: error.name,
-          message: error.message,
-          stack: error.stack
-        });
-        loadingStatus.style.display = 'block';
-        statusText.textContent = 'Using knowledge-based responses (model loading failed)';
+        console.error('Unexpected error during initialization:', error);
+        showMessage('bot', '⚠️ An unexpected error occurred. Please refresh the page.');
         modelReady = false;
+        loadingStatus.style.display = 'block';
+        statusText.textContent = 'Error during initialization';
+
+        // Reset loading timer
+        loadingStartTime = null;
+        lastMessageTime = 0;
       }
     }
 
@@ -697,12 +933,20 @@ Choose only the keys that are necessary to answer the question well. Always incl
     }
 
     // Display message in chat
-    function showMessage(sender, text) {
+    function showMessage(sender, text, messageType = 'default') {
       const messageDiv = document.createElement('div');
       messageDiv.className = `message ${sender}`;
       
       const contentDiv = document.createElement('div');
       contentDiv.className = 'message-content';
+      
+      // Add message type classes for styling
+      if (messageType === 'error') {
+        contentDiv.classList.add('error-message');
+      } else if (messageType === 'info') {
+        contentDiv.classList.add('info-message');
+      }
+      
       contentDiv.innerHTML = text; // Support for HTML formatting
       
       messageDiv.appendChild(contentDiv);
@@ -740,6 +984,7 @@ Choose only the keys that are necessary to answer the question well. Always incl
       
       console.log('=== handleSendMessage START ===');
       console.log('User message:', message);
+      console.log('Model ready:', modelReady);
       
       if (!message) {
         console.log('Message is empty, ignoring');
@@ -754,6 +999,7 @@ Choose only the keys that are necessary to answer the question well. Always incl
       // Show typing indicator
       showTypingIndicator();
       loadingStatus.style.display = 'block';
+      loadingStatus.style.color = 'white';
       
       console.log('UI updated: message displayed, input cleared, loading shown');
       
@@ -775,7 +1021,19 @@ Choose only the keys that are necessary to answer the question well. Always incl
         });
         removeTypingIndicator();
         loadingStatus.style.display = 'none';
-        showMessage('bot', "Sorry, I encountered an error processing your question. Please try again.");
+        
+        // Show user-friendly error message
+        let errorMessage = '❌ Sorry, I encountered an error processing your question.';
+        
+        if (error.message && error.message.includes('GPU')) {
+          errorMessage = '⚠️ GPU error detected. Please try refreshing the page or using a different browser.';
+        } else if (error.message && error.message.includes('memory')) {
+          errorMessage = '⚠️ Out of memory. Please refresh the page and try again.';
+        } else if (error.message && error.message.includes('timeout')) {
+          errorMessage = '⏱️ Request timed out. Please try asking a simpler question or refresh the page.';
+        }
+        
+        showMessage('bot', errorMessage, 'error');
         console.log('=== handleSendMessage END (ERROR) ===');
       } finally {
         sendBtn.disabled = false;
