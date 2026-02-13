@@ -345,6 +345,7 @@
       const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
       const isEdge = /Edg/.test(navigator.userAgent);
       const isFirefox = /Firefox/.test(navigator.userAgent);
+      const isSafari = /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
       
       console.log('Browser capabilities:', {
         hasWebGPU,
@@ -354,6 +355,7 @@
         isChrome,
         isEdge,
         isFirefox,
+        isSafari,
         userAgent: navigator.userAgent
       });
 
@@ -373,8 +375,8 @@
         return false;
       }
 
-      // Better browser support
-      if (!isChrome && !isEdge && !isFirefox) {
+      // Support Chrome, Edge, Firefox, and Safari
+      if (!isChrome && !isEdge && !isFirefox && !isSafari) {
         console.warn('⚠️ Browser may not be fully supported');
         return false;
       }
@@ -393,13 +395,13 @@
       contentDiv.innerHTML = `
         <strong>⚠️ Browser Not Fully Supported</strong><br>
         This AI chat feature requires a modern browser with WebGPU support.<br><br>
-        <strong>Recommended browsers:</strong>
+        <strong>Supported browsers and platforms:</strong>
         <ul style="margin: 10px 0; padding-left: 20px;">
-          <li><strong>Chrome/Chromium 113+</strong> (with GPU support enabled)</li>
-          <li><strong>Edge 113+</strong> (with GPU support enabled)</li>
-          <li><strong>Firefox 121+</strong> (with WebGPU enabled in about:config)</li>
+          <li><strong>Chrome/Edge/Chromium 113+:</strong> Windows (Direct3D 12), macOS, ChromeOS, Android 12+ (Qualcomm/ARM GPUs), with GPU support enabled</li>
+          <li><strong>Firefox 141+:</strong> Windows; Firefox 145+ on macOS Tahoe 26 (ARM64)</li>
+          <li><strong>Safari:</strong> macOS Tahoe 26, iOS 26, iPadOS 26, visionOS 26</li>
         </ul>
-        <strong>To enable WebGPU in Firefox:</strong> Visit <code>about:config</code> and set <code>dom.webgpu.enabled</code> to <code>true</code><br><br>
+        <strong>To enable WebGPU in Firefox (if feature flag not enabled):</strong> Visit <code>about:config</code> and set <code>dom.webgpu.enabled</code> to <code>true</code><br><br>
         I can still help using knowledge-based responses, but the full AI experience requires WebGPU.
       `;
       
