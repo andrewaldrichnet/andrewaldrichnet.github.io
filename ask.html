@@ -302,7 +302,20 @@
   
   <!-- WebLLM for local LLM -->
   <script type="module">
-    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+    let webllm = null;
+    
+    try {
+      webllm = await import("https://esm.run/@mlc-ai/web-llm");
+      console.log('✓ WebLLM module imported successfully');
+    } catch (error) {
+      console.error('✗ Failed to import WebLLM module:', error);
+      console.error('Error details:', {
+        name: error.name,
+        message: error.message,
+        type: typeof error
+      });
+      webllm = null;
+    }
 
     let andrewData = null;
     let engine = null;
@@ -372,6 +385,12 @@
 
       if (!hasIndexedDB) {
         console.warn('⚠️ IndexedDB not supported');
+        return false;
+      }
+      
+      // Check if WebLLM was successfully imported
+      if (!webllm) {
+        console.warn('⚠️ WebLLM module not available');
         return false;
       }
 
@@ -513,14 +532,43 @@
           return;
         }
 
+        // Verify webllm module is available
+        if (!webllm || !webllm.CreateMLCEngine) {
+          console.warn('WebLLM module not available');
+          browserSupported = false;
+          modelReady = false;
+          showBrowserNotSupportedMessage();
+          loadingStatus.style.display = 'block';
+          statusText.textContent = 'Using knowledge-based responses (your browser requires WebGPU support)';
+          return;
+        }
+
         loadingStatus.style.display = 'block';
         statusText.textContent = 'Loading AI model... 0%';
         
         try {
-          engine = await webllm.CreateMLCEngine(
-            selectedModel,
-            { initProgressCallback: initProgressCallback }
+          // Add a timeout for model loading (5 minutes max)
+          const loadingTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Model loading timeout - took too long to initialize')), 5 * 60 * 1000)
           );
+
+          // Check if this is iOS and adjust accordingly
+          const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+          const initOptions = { 
+            initProgressCallback: initProgressCallback
+          };
+
+          // For iOS, use more conservative settings
+          if (isIOS) {
+            console.log('iOS device detected - using conservative model loading settings');
+            initOptions.logitProc = 'disable'; // Disable some processing on iOS
+          }
+
+          // Race between model loading and timeout
+          engine = await Promise.race([
+            webllm.CreateMLCEngine(selectedModel, initOptions),
+            loadingTimeout
+          ]);
           
           modelReady = true;
           console.log('✓ Model initialized successfully');
@@ -554,10 +602,16 @@
         } catch (error) {
           console.error('Model loading error:', error);
           
-          // Check if it's a WebGPU-related error
-          if (error.message && (error.message.includes('WebGPU') || error.message.includes('GPU'))) {
+          // Check if it's a timeout error
+          if (error.message && error.message.includes('timeout')) {
+            console.warn('⚠️ Model loading timed out - device may have insufficient resources');
+            showMessage('bot', '⚠️ AI model loading is taking too long on your device. Using knowledge-based responses instead.');
+          } else if (error.message && (error.message.includes('WebGPU') || error.message.includes('GPU'))) {
             browserSupported = false;
             showBrowserNotSupportedMessage();
+          } else if (error.message && (error.message.includes('memory') || error.message.includes('OOM'))) {
+            console.warn('⚠️ Out of memory - device may not have enough RAM');
+            showMessage('bot', '⚠️ Your device does not have enough memory for the AI model. Using knowledge-based responses instead.');
           } else {
             console.error('Error details:', {
               name: error.name,
@@ -1063,6 +1117,43 @@ Choose only the keys that are necessary to answer the question well. Always incl
       userInput.focus();
       console.log('Application initialization complete');
       console.log('=== PAGE LOAD COMPLETE ===');
+    });
+
+    // Global error handler to catch uncaught errors
+    window.addEventListener('error', (event) => {
+      console.error('Uncaught error:', event.error);
+      console.error('Error details:', {
+        message: event.message,
+        filename: event.filename,
+        lineno: event.lineno,
+        colno: event.colno,
+        error: event.error ? {
+          name: event.error.name,
+          message: event.error.message,
+          stack: event.error.stack
+        } : null
+      });
+      
+      // Show user-friendly message if not already showing error
+      if (!loadingStatus.textContent.includes('Error')) {
+        showMessage('bot', '⚠️ An unexpected error occurred. The app may not function properly. Please refresh the page.');
+      }
+    });
+
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      console.error('Rejection details:', {
+        reason: event.reason,
+        promise: event.promise,
+        stack: event.reason?.stack
+      });
+      
+      // Prevent the app from crashing completely
+      event.preventDefault();
+      
+      // Show user-friendly message
+      showMessage('bot', '⚠️ An unexpected error occurred. The app may not function properly. Please refresh the page.');
     });
   </script>
 </body>
