@@ -1,0 +1,207 @@
+{
+  "profile": {
+    "name": "Andrew Aldrich",
+    "title": "Full Stack Engineer",
+    "description": "Software developer that innovates new ways to solve problems for people to make running business more efficient",
+    "linkedIn": "https://www.linkedin.com/in/andrew-aldrich-8223ba1b3",
+    "location": "Johnston City"
+  },
+  "skills": [
+    "SQL",
+    "HTML",
+    "CSS",
+    "Angular",
+    "C#",
+    "TypeScript",
+    "Microsoft .NET",
+    "iOS & Android",
+    "Python",
+    "Flask",
+    "JavaScript",
+    "React",
+    "Entity Framework",
+    "Xamarin",
+    "Unity",
+    "Game Design",
+    "Node.js",
+    "OpenAI",
+    "Machine Learning",
+    "Blazor",
+    "MAUI",
+    "SQLite",
+    "IndexedDB",
+    "Docker Containers",
+    "EF Core",
+    "MongoDB",
+    "GitHub Actions",
+    "Firebase",
+    "Bootstrap CSS",
+    "Azure",
+    "SignalR"
+  ],
+  "certificates": [
+    {
+      "name": "Site Development Associate",
+      "issuer": "Certification Partners (CIW)"
+    },
+    {
+      "name": "CompTIA Project+",
+      "issuer": "CompTIA"
+    },
+    {
+      "name": "Oracle Database SQL Certified",
+      "issuer": "Oracle"
+    },
+    {
+      "name": "ITL Foundation Level",
+      "issuer": "AXELOS Global Best Practice"
+    }
+  ],
+  "education": [
+    {
+      "degree": "Bachelor of Science in Computer Science",
+      "school": "Western Governors University",
+      "years": "2019 - 2020"
+    },
+    {
+      "degree": "Associate of Science in Computer Science",
+      "school": "John A Logan College",
+      "years": "2016 - 2019"
+    }
+  ],
+  "experience": [
+    {
+      "title": "Lead Engineer",
+      "company": "Cordance",
+      "periods": ["July 2016 - May 2019 (Intern)", "Sep 2020 - Present"]
+    }
+  ],
+  "projects": [
+    {
+      "title": "LiveBulletin",
+      "description": "Virtual bulletin board to organize messages, events, and announcements",
+      "details": "Most everyone has seen a bulletin board of some fashion. If you attend a church they might have a list of events and announcements posted. I set out to create a simple virtual solution to help everyone get connected and stay informed. The app allows businesses to invite team members, create events, and share announcements. It features team collaboration, configurable security access, and mobile-friendly design.",
+      "techUsed": ["C#", "React", ".NET Core", "Azure", "Docker Containers", "EF Core", "MongoDB", "GitHub Actions", "Firebase", "Bootstrap CSS", "TypeScript"],
+      "highlights": [
+        "CI/CD pipeline using GitHub actions",
+        "Deployed to Azure using web containers",
+        "MongoDB Atlas for cloud database",
+        "Firebase hosting for frontend"
+      ]
+    },
+    {
+      "title": "Generative AI Dynamic Web Page Generator",
+      "description": "Using AI to create content and designs",
+      "details": "To deepen understanding of AI, I developed a project to generate web pages based on a prompt. Instead of having AI generate raw HTML, I fed into the AI model sections that represented HTML code. Each section defined what it was and what inputs were needed. I then allowed the model to choose the best sections and generate inputs for each section. This proof of concept demonstrates the power of structured AI prompting.",
+      "techUsed": ["HTML", "CSS", "JavaScript", "AI", "OpenAI", "ChatGPT 4o Mini"],
+      "highlights": [
+        "Proof of concept for AI-driven design",
+        "Structured prompting approach",
+        "Generative content creation"
+      ]
+    },
+    {
+      "title": "Team Reporting Tool",
+      "description": "A tool for team health",
+      "details": "I developed this tool to promote healthy teams in the workplace. I developed both a fully functional website and iOS and Android app. The tool allows a business to invite team members. Team members can then be assigned a leader. Every week team members fill out a report asking simple questions, such as their high and low of the week and allows them to rate their stress, morale, and workload. Users can customize the report to add their own questions and ratings.",
+      "techUsed": ["C#", "Angular", "Entity Framework", "Microsoft .NET", "iOS & Android", "Xamarin"],
+      "highlights": [
+        "Full stack web development",
+        "Cross-platform mobile apps",
+        "Customizable team surveys",
+        "Team health metrics"
+      ]
+    },
+    {
+      "title": "AI/ML Support Ticket Urgency Predictor",
+      "description": "Using AI & ML to predict urgency",
+      "details": "For my WGU capstone project I wrote a website that would use machine learning and AI to predict the urgency level of support tickets. The goal was that given a set of data that contains support tickets that have been labeled as urgent/not urgent on a scale of 0-3, the computer would be able to predict the urgency of a new support ticket. The project resulted in an accuracy result of 85.82%.",
+      "techUsed": ["Python", "Flask", "HTML", "CSS", "JavaScript", "AI", "Machine Learning"],
+      "highlights": [
+        "85.82% accuracy on predictions",
+        "Machine learning model training",
+        "Flask web framework integration",
+        "WGU capstone project"
+      ]
+    },
+    {
+      "title": "Musicians Worship",
+      "description": "A community for church musicians",
+      "details": "In my spare time, I worked on a personal project that combined my passion for music and software development. I aimed to create a website to manage chord charts and resources for songs, and to establish a community for sharing these resources with the world. The site included features such as sending friend requests, creating groups for sharing ideas, adding songs, creating playlists, and other tools useful for church musicians. In one version, I even added a real-time instant messenger for users to communicate. The search included simplistic search correction to offer 'did you mean' functionality. I rewrote the project 2-3 times to improve the code, and initially started in Angular.JS before rewriting the frontend in Angular.",
+      "techUsed": ["C#", "Microsoft .Net", "Angular", "Entity Framework", "SignalR"],
+      "highlights": [
+        "Real-time instant messaging with SignalR",
+        "Community platform for church musicians",
+        "Chord chart management",
+        "Search correction functionality",
+        "Multiple rewrites for code improvement"
+      ]
+    },
+    {
+      "title": "Penguin Jump",
+      "description": "An infinite penguin runner",
+      "details": "In my spare time, I developed an infinite runner game called 'Penguin Jump'. This engaging game features a variety of power-ups and sound effects to enhance the player experience. Additionally, the app includes a store where players can use the coins they collect to purchase new skins for the penguin. The artwork for the penguin character was drawn by my sister, and I digitized it. The development process allowed me to hone my skills in game design and programming.",
+      "techUsed": ["C#", "Unity", "Game Design"],
+      "highlights": [
+        "Infinite runner gameplay",
+        "Power-ups and sound effects",
+        "In-game store system",
+        "Custom artwork integration",
+        "Mobile game deployment"
+      ]
+    },
+    {
+      "title": "AI Helpdesk Ticket Summarizer",
+      "description": "Summarize support tickets",
+      "details": "I built a tool at work to help our team — especially the developers — get the gist of helpdesk tickets at a glance and act accordingly. By pulling out critical details from each ticket, it saves our team the time of digging for context and key info. Nearly all of the code was generated via Copilot, but I approached the project as if I were writing it myself—debugging, testing, and refining each piece individually before assembling everything into a working solution. The tool looks for tasks in ClickUp that have a helpdesk ticket link but do not yet have a summary comment. Because the helpdesk system is outdated and lacks an API, the solution fakes a login via POST requests and manages cookies to retrieve ticket detail pages. Once it has the ticket data, it uses OpenAI to generate a concise summary and adds that as a comment in ClickUp.",
+      "techUsed": ["Node.JS", "OpenAI", "APIs", "GitHub Copilot", "VSCode", "ClickUp REST APIs"],
+      "highlights": [
+        "AI-powered summarization",
+        "ClickUp integration",
+        "Session management with cookies",
+        "99% code generation via Copilot",
+        "Production tool in use"
+      ]
+    },
+    {
+      "title": "Sales Tracker - Blazor Hybrid",
+      "description": "Track inventory and sales",
+      "details": "I developed a demo Sales Tracker and Inventory Management System to explore Blazor Hybrid and better understand how to share UI and business logic across native and web platforms. The application follows an offline-first approach and runs on desktop, mobile, and in the browser from a largely shared codebase. It includes a dashboard with monthly sales metrics, profit calculations, pending deliveries, and backorder detection. Users can create and manage sales with real-time inventory validation, automatic stock allocation, and item management with image uploads.",
+      "techUsed": ["Blazor", "MAUI", "C#", "SQLite", "IndexedDB", "HTML/CSS"],
+      "highlights": [
+        "Cross-platform development (desktop, mobile, web)",
+        "Offline-first architecture",
+        "Shared codebase across platforms",
+        "Real-time inventory validation",
+        "Clean architecture and separation of concerns"
+      ]
+    }
+  ],
+  "interests": [
+    {
+      "title": "Music",
+      "description": "I enjoy playing drums, piano, and guitar, finding each instrument uniquely fulfilling. However, guitar is probably my favorite. I serve at my local church Johnston City United Pentecostal Church as the music director. I enjoy leading a small team of vocalists and singers. As a worship musician, I get to play many different styles of music. I started playing guitar at an early age of 8. I've also been given several opportunities to play at church youth camps, youth conventions, and other events."
+    },
+    {
+      "title": "Photography",
+      "description": "It's special to think how each picture captures a moment. The moment may not last forever but the picture will."
+    },
+    {
+      "title": "Video",
+      "description": "I enjoy creating videos, recording myself playing instrumentals and editing them into captivating pieces."
+    }
+  ],
+  "personalBackground": {
+    "churchRole": "Music director at Johnston City United Pentecostal Church",
+    "instruments": ["Drums", "Piano", "Guitar"],
+    "favoriteInstrument": "Guitar",
+    "startedGuitar": "Age 8",
+    "firstTeacher": "Danny",
+    "missionTrip": {
+      "year": 2019,
+      "name": "AYC Benelux",
+      "locations": ["Belgium", "The Netherlands", "Luxembourg"],
+      "highlights": ["Street outreach with worship songs", "Speaking and ministry to people", "Visited castles in Luxembourg"]
+    }
+  }
+}

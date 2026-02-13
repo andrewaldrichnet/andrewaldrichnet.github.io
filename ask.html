@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ask Andrew | AI Chatbot</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-Zenh87qX5JnK2Jl0vWa8Ck2rdkQ2Bzep5IDxbcnCeuOxjzrPF/et3URy9Bv1WTRi" crossorigin="anonymous" />
+  <link href="site.css" rel="stylesheet" />
+  <style>
+    .chat-container {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .chat-header {
+      background: rgba(0, 0, 0, 0.3);
+      color: white;
+      padding: 20px;
+      text-align: center;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .chat-header h1 {
+      margin: 0;
+      font-size: 28px;
+      font-weight: 600;
+    }
+
+    .chat-header p {
+      margin: 5px 0 0 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .message {
+      display: flex;
+      margin-bottom: 10px;
+      animation: slideIn 0.3s ease-in-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      justify-content: flex-end;
+    }
+
+    .message.bot {
+      justify-content: flex-start;
+    }
+
+    .message-content {
+      max-width: 70%;
+      padding: 12px 15px;
+      border-radius: 12px;
+      word-wrap: break-word;
+      line-height: 1.4;
+      font-size: 14px;
+    }
+
+    .user .message-content {
+      background-color: #0d6efd;
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bot .message-content {
+      background-color: white;
+      color: #333;
+      border-bottom-left-radius: 4px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 12px 15px;
+      background-color: white;
+      border-radius: 12px;
+      border-bottom-left-radius: 4px;
+    }
+
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #667eea;
+      animation: typing 1.4s infinite;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typing {
+      0%, 60%, 100% {
+        opacity: 0.5;
+        transform: translateY(0);
+      }
+      30% {
+        opacity: 1;
+        transform: translateY(-10px);
+      }
+    }
+
+    .input-container {
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .input-group {
+      display: flex;
+      gap: 10px;
+    }
+
+    .input-group input {
+      flex: 1;
+      padding: 12px 15px;
+      border: none;
+      border-radius: 25px;
+      background: white;
+      font-size: 14px;
+    }
+
+    .input-group input:focus {
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+    }
+
+    .input-group button {
+      padding: 12px 20px;
+      background: white;
+      color: #667eea;
+      border: none;
+      border-radius: 25px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .input-group button:hover {
+      background: #f0f0f0;
+      transform: scale(1.05);
+    }
+
+    .input-group button:active {
+      transform: scale(0.95);
+    }
+
+    .nav-back {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      background: white;
+      color: #667eea;
+      border: none;
+      padding: 8px 15px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: 600;
+      text-decoration: none;
+      font-size: 14px;
+      transition: all 0.3s ease;
+    }
+
+    .nav-back:hover {
+      background: #f0f0f0;
+      transform: translateX(-5px);
+    }
+
+    .loading-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-right: 8px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .error-message {
+      background: #ff6b6b;
+      color: white;
+      padding: 12px 15px;
+      border-radius: 12px;
+      margin: 10px 0;
+    }
+
+    @media (max-width: 768px) {
+      .message-content {
+        max-width: 85%;
+      }
+
+      .nav-back {
+        top: 10px;
+        left: 10px;
+        padding: 6px 12px;
+        font-size: 12px;
+      }
+
+      .chat-header h1 {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="chat-container">
+    <a href="index.html" class="nav-back">← Back</a>
+    
+    <div class="chat-header">
+      <h1>Ask Andrew</h1>
+      <p>Ask me anything about my projects, skills, experience, or interests</p>
+    </div>
+
+    <div class="messages-container" id="messagesContainer">
+      <div class="message bot">
+        <div class="message-content">
+          <strong>Hi there! 👋</strong><br>I'm an AI assistant trained on Andrew's information. Feel free to ask me anything about his projects, skills, experience, or interests. Some things you could ask:<br>
+          • <em>"What projects have you worked on?"</em><br>
+          • <em>"Tell me about your experience with React"</em><br>
+          • <em>"What's your background in AI and ML?"</em><br>
+          • <em>"Tell me about your music interests"</em>
+        </div>
+      </div>
+    </div>
+
+    <div class="input-container">
+      <div class="input-group">
+        <input 
+          type="text" 
+          id="userInput" 
+          placeholder="Type your question here..." 
+          autocomplete="off"
+        />
+        <button id="sendBtn">Send</button>
+      </div>
+      <div id="loadingStatus" style="color: white; font-size: 12px; margin-top: 8px; display: none;">
+        <span class="loading-spinner"></span><span id="statusText">Loading AI model...</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.2/dist/js/bootstrap.min.js"></script>
+  
+  <!-- WebLLM for local LLM -->
+  <script type="module">
+    import * as webllm from "https://esm.run/@mlc-ai/web-llm";
+
+    let andrewData = null;
+    let engine = null;
+    let modelReady = false;
+    const selectedModel = "Llama-3.1-8B-Instruct-q4f32_1-MLC";
+
+    const messagesContainer = document.getElementById('messagesContainer');
+    const userInput = document.getElementById('userInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const loadingStatus = document.getElementById('loadingStatus');
+    const statusText = document.getElementById('statusText');
+
+    // Load Andrew's data
+    async function loadAndrewData() {
+      try {
+        const response = await fetch('/data/andrewData.json');
+        andrewData = await response.json();
+        console.log('Andrew data loaded successfully');
+      } catch (error) {
+        console.error('Error loading Andrew data:', error);
+        showMessage('bot', 'Error loading knowledge base. Please refresh the page.');
+      }
+    }
+
+    // Callback for model loading progress
+    const initProgressCallback = (initProgress) => {
+      const progress = Math.round((initProgress.progress * 100));
+      statusText.textContent = `Loading AI model... ${progress}%`;
+      console.log(`Progress: ${progress}%`);
+    };
+
+    // Initialize the AI model using WebLLM
+    async function initializeModel() {
+      try {
+        loadingStatus.style.display = 'block';
+        statusText.textContent = 'Loading AI model... 0%';
+        
+        engine = await webllm.CreateMLCEngine(
+          selectedModel,
+          { initProgressCallback: initProgressCallback }
+        );
+        
+        modelReady = true;
+        loadingStatus.style.display = 'none';
+        showMessage('bot', '✓ AI model loaded! Ready to chat. Ask me about Andrew!');
+      } catch (error) {
+        console.error('Error initializing model:', error);
+        loadingStatus.style.display = 'block';
+        statusText.textContent = 'Using knowledge-based responses (model loading failed)';
+        modelReady = false;
+      }
+    }
+
+    // Format Andrew's data into context
+    function buildContext() {
+      if (!andrewData) return '';
+      
+      let context = `You are an AI assistant representing Andrew Aldrich, a ${andrewData.profile.title}. 
+
+About Andrew:
+- ${andrewData.profile.description}
+- Location: ${andrewData.profile.location}
+- LinkedIn: ${andrewData.profile.linkedIn}
+
+Skills: ${andrewData.skills.join(', ')}
+
+Projects:
+`;
+      
+      andrewData.projects.forEach(project => {
+        context += `\n- ${project.title}: ${project.description} (Tech: ${project.techUsed.join(', ')})`;
+      });
+
+      context += `\n\nEducation:
+`;
+      andrewData.education.forEach(edu => {
+        context += `\n- ${edu.degree} from ${edu.school} (${edu.years})`;
+      });
+
+      context += `\n\nCertifications:
+`;
+      andrewData.certificates.forEach(cert => {
+        context += `\n- ${cert.name} (${cert.issuer})`;
+      });
+
+      context += `\n\nInterests: Music (plays drums, piano, guitar), Photography, Video Creation
+Music Role: Music director at Johnston City United Pentecostal Church
+`;
+
+      return context;
+    }
+
+    // Generate response using WebLLM engine with streaming
+    async function generateResponse(userQuestion) {
+      const context = buildContext();
+      
+      // If model is ready, try to use it
+      if (modelReady && engine) {
+        try {
+          statusText.textContent = 'AI is thinking...';
+          
+          const systemPrompt = `You are an AI assistant representing Andrew Aldrich, a Full Stack Engineer. Answer questions about Andrew based on the context provided. Be conversational, friendly, and keep responses concise (2-3 sentences typically).`;
+          
+          const messages = [
+            { role: "system", content: systemPrompt },
+            { 
+              role: "user", 
+              content: `Context about Andrew:\n${context}\n\nQuestion from visitor: ${userQuestion}\n\nProvide a helpful, accurate response about Andrew based on the context provided.`
+            }
+          ];
+
+          // Use streaming for real-time response display
+          const chunks = await engine.chat.completions.create({
+            messages,
+            temperature: 0.7,
+            max_tokens: 300,
+            stream: true,
+          });
+
+          let fullReply = "";
+          for await (const chunk of chunks) {
+            fullReply += chunk.choices[0]?.delta.content || "";
+          }
+          
+          return fullReply.trim() || getKnowledgeBasedResponse(userQuestion);
+        } catch (error) {
+          console.error('Error generating response:', error);
+          return getKnowledgeBasedResponse(userQuestion);
+        }
+      }
+      
+      // Fallback to knowledge-based responses
+      return getKnowledgeBasedResponse(userQuestion);
+    }
+
+    // Knowledge-based response system (works without AI model)
+    function getKnowledgeBasedResponse(userQuestion) {
+      const question = userQuestion.toLowerCase();
+      
+      // Project queries
+      if (question.includes('project')) {
+        const projectNames = andrewData.projects.map(p => p.title).join(', ');
+        return `Andrew has worked on several projects: ${projectNames}. Which one would you like to know more about?`;
+      }
+
+      if (question.includes('ai') || question.includes('machine learning')) {
+        const aiProjects = andrewData.projects.filter(p => 
+          p.techUsed.includes('AI') || p.techUsed.includes('Machine Learning')
+        );
+        return `Andrew has experience with AI and ML through projects like: ${aiProjects.map(p => p.title).join(', ')}. He's particularly interested in using AI to solve real-world business problems.`;
+      }
+
+      if (question.includes('react') || question.includes('angular')) {
+        return `Andrew has expertise in both React and Angular. He's used React in projects like LiveBulletin and Angular in the Team Reporting Tool and Musicians Worship. He's proficient in TypeScript for both frameworks.`;
+      }
+
+      if (question.includes('music')) {
+        return `Andrew is passionate about music! He plays drums, piano, and guitar (his favorite). He serves as the music director at Johnston City United Pentecostal Church and has played at youth camps and conventions. He even has a project called "Musicians Worship" to help church musicians manage chord charts and resources.`;
+      }
+
+      if (question.includes('education') || question.includes('degree')) {
+        return `Andrew earned a Bachelor of Science in Computer Science from Western Governors University (2019-2020) and an Associate of Science in Computer Science from John A Logan College (2016-2019).`;
+      }
+
+      if (question.includes('skill') || question.includes('technology')) {
+        return `Andrew's technical skills include: ${andrewData.skills.slice(0, 10).join(', ')}, and many more. He's a full-stack developer with expertise in both backend and frontend technologies.`;
+      }
+
+      if (question.includes('experience') || question.includes('work')) {
+        return `Andrew is currently a Lead Engineer at Cordance (since Sep 2020, with prior internship from July 2016 - May 2019). He creates innovative solutions to solve business problems and make operations more efficient.`;
+      }
+
+      if (question.includes('certificate') || question.includes('certified')) {
+        const certs = andrewData.certificates.map(c => c.name).join(', ');
+        return `Andrew holds several certifications: ${certs}. These demonstrate his commitment to professional development and industry standards.`;
+      }
+
+      if (question.includes('interest') || question.includes('hobby')) {
+        return `Andrew is interested in music (plays multiple instruments), photography (capturing moments in time), and video creation (editing music videos). He's also involved in worship ministry and community service.`;
+      }
+
+      // Default response
+      return `That's a great question! I'm still learning about Andrew. Feel free to ask about his projects, skills, experience, education, or interests. You could also ask about specific technologies or projects he's worked on.`;
+    }
+
+    // Display message in chat
+    function showMessage(sender, text) {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'message-content';
+      contentDiv.innerHTML = text; // Support for HTML formatting
+      
+      messageDiv.appendChild(contentDiv);
+      messagesContainer.appendChild(messageDiv);
+      
+      // Scroll to bottom
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Show typing indicator
+    function showTypingIndicator() {
+      const messageDiv = document.createElement('div');
+      messageDiv.className = 'message bot';
+      messageDiv.id = 'typingIndicator';
+      
+      const contentDiv = document.createElement('div');
+      contentDiv.className = 'typing-indicator';
+      contentDiv.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+      
+      messageDiv.appendChild(contentDiv);
+      messagesContainer.appendChild(messageDiv);
+      
+      messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    // Remove typing indicator
+    function removeTypingIndicator() {
+      const indicator = document.getElementById('typingIndicator');
+      if (indicator) indicator.remove();
+    }
+
+    // Handle send button click
+    async function handleSendMessage() {
+      const message = userInput.value.trim();
+      
+      if (!message) return;
+      
+      // Show user message
+      showMessage('user', message);
+      userInput.value = '';
+      sendBtn.disabled = true;
+      
+      // Show typing indicator
+      showTypingIndicator();
+      loadingStatus.style.display = 'block';
+      
+      try {
+        // Generate response
+        const response = await generateResponse(message);
+        
+        removeTypingIndicator();
+        loadingStatus.style.display = 'none';
+        showMessage('bot', response);
+      } catch (error) {
+        console.error('Error:', error);
+        removeTypingIndicator();
+        loadingStatus.style.display = 'none';
+        showMessage('bot', "Sorry, I encountered an error processing your question. Please try again.");
+      } finally {
+        sendBtn.disabled = false;
+        userInput.focus();
+      }
+    }
+
+    // Event listeners
+    sendBtn.addEventListener('click', handleSendMessage);
+    userInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey && !sendBtn.disabled) {
+        e.preventDefault();
+        handleSendMessage();
+      }
+    });
+
+    // Initialize on page load
+    window.addEventListener('load', async () => {
+      await loadAndrewData();
+      await initializeModel();
+      userInput.focus();
+    });
+  </script>
+</body>
+
+</html>
