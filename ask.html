@@ -255,7 +255,8 @@
           • <em>"What projects have you worked on?"</em><br>
           • <em>"Tell me about your experience with React"</em><br>
           • <em>"What's your background in AI and ML?"</em><br>
-          • <em>"Tell me about your music interests"</em>
+          • <em>"Tell me about your music interests"</em><br><br>
+          <small><strong>Disclaimer:</strong> AI responses are generated automatically and may not be entirely accurate. These responses are provided for informational purposes and may not necessarily reflect Andrew's personal views, opinions, or professional recommendations. For official inquiries or critical information, please contact Andrew directly.</small>
         </div>
       </div>
     </div>
@@ -295,12 +296,18 @@
 
     // Load Andrew's data
     async function loadAndrewData() {
+      console.log('Loading Andrew data from JSON...');
       try {
         const response = await fetch('/data/andrewData.json');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
         andrewData = await response.json();
-        console.log('Andrew data loaded successfully');
+        console.log('✓ Andrew data loaded successfully');
+        console.log('Data keys available:', Object.keys(andrewData));
+        console.log('Full data object:', andrewData);
       } catch (error) {
-        console.error('Error loading Andrew data:', error);
+        console.error('✗ Error loading Andrew data:', error);
         showMessage('bot', 'Error loading knowledge base. Please refresh the page.');
       }
     }
@@ -315,6 +322,8 @@
     // Initialize the AI model using WebLLM
     async function initializeModel() {
       try {
+        console.log('=== Initializing WebLLM Model ===');
+        console.log('Selected model:', selectedModel);
         loadingStatus.style.display = 'block';
         statusText.textContent = 'Loading AI model... 0%';
         
@@ -324,63 +333,233 @@
         );
         
         modelReady = true;
+        console.log('✓ Model initialized successfully');
+        console.log('=== Model Initialization Complete ===');
         loadingStatus.style.display = 'none';
         showMessage('bot', '✓ AI model loaded! Ready to chat. Ask me about Andrew!');
       } catch (error) {
-        console.error('Error initializing model:', error);
+        console.error('✗ Error initializing model:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         loadingStatus.style.display = 'block';
         statusText.textContent = 'Using knowledge-based responses (model loading failed)';
         modelReady = false;
       }
     }
 
-    // Format Andrew's data into context
-    function buildContext() {
-      if (!andrewData) return '';
+    // Get available data keys from andrewData
+    function getAvailableKeys() {
+      if (!andrewData) {
+        console.warn('getAvailableKeys: andrewData not loaded');
+        return [];
+      }
+      const keys = Object.keys(andrewData).filter(key => key !== '_id');
+      console.log('Available data keys:', keys);
+      return keys;
+    }
+
+    // Ask LLM which context keys would be helpful for the user's question
+    async function requestContextKeys(userQuestion) {
+      console.log('=== requestContextKeys START ===');
+      console.log('User question:', userQuestion);
       
-      let context = `You are an AI assistant representing Andrew Aldrich, a ${andrewData.profile.title}. 
+      if (!modelReady || !engine) {
+        console.warn('Model not ready, returning all available keys');
+        const allKeys = getAvailableKeys();
+        console.log('Fallback keys:', allKeys);
+        return allKeys;
+      }
 
-About Andrew:
-- ${andrewData.profile.description}
-- Location: ${andrewData.profile.location}
-- LinkedIn: ${andrewData.profile.linkedIn}
+      try {
+        const availableKeys = getAvailableKeys();
+        console.log('Available keys for LLM selection:', availableKeys);
+        
+        const systemPrompt = `You are a helpful assistant that determines which data context would be useful for answering a question about Andrew Aldrich. 
 
-Skills: ${andrewData.skills.join(', ')}
+Respond with ONLY the following format:
+USECONTEXT key1, key2, key3
 
-Projects:
-`;
+Where key1, key2, etc. are the relevant data categories from this list: ${availableKeys.join(', ')}
+
+Choose only the keys that are necessary to answer the question well. Always include 'profile' for context about who Andrew is.`;
+
+        const messages = [
+          { role: "system", content: systemPrompt },
+          { 
+            role: "user", 
+            content: `Question: "${userQuestion}"\n\nWhich data keys from the available data would be helpful to answer this question? Respond with the USECONTEXT format only.`
+          }
+        ];
+
+        console.log('Sending context key request to LLM...');
+        const chunks = await engine.chat.completions.create({
+          messages,
+          temperature: 0.3,
+          max_tokens: 100,
+          stream: true,
+        });
+
+        let response = "";
+        for await (const chunk of chunks) {
+          response += chunk.choices[0]?.delta.content || "";
+        }
+
+        console.log('LLM context key response:', response);
+
+        // Parse the response to extract keys
+        const match = response.match(/USECONTEXT\s*(.+)/i);
+        if (match) {
+          const keysString = match[1].trim();
+          console.log('Extracted keys string:', keysString);
+          
+          const requestedKeys = keysString
+            .split(',')
+            .map(k => k.trim())
+            .filter(k => availableKeys.includes(k));
+          
+          console.log('Parsed requested keys:', requestedKeys);
+          console.log('=== requestContextKeys END (SUCCESS) ===');
+          
+          return requestedKeys.length > 0 ? requestedKeys : availableKeys;
+        }
+        
+        console.warn('No USECONTEXT format found in response, using all keys');
+        console.log('=== requestContextKeys END (FALLBACK) ===');
+        return availableKeys;
+      } catch (error) {
+        console.error('Error requesting context keys:', error);
+        console.log('=== requestContextKeys END (ERROR) ===');
+        return getAvailableKeys();
+      }
+    }
+
+    // Format Andrew's data into context based on selected keys
+    function buildContext(selectedKeys) {
+      console.log('=== buildContext START ===');
+      console.log('Selected keys:', selectedKeys);
       
-      andrewData.projects.forEach(project => {
-        context += `\n- ${project.title}: ${project.description} (Tech: ${project.techUsed.join(', ')})`;
-      });
+      if (!andrewData || !selectedKeys || selectedKeys.length === 0) {
+        console.warn('buildContext: Missing andrewData or selectedKeys');
+        console.log('=== buildContext END (EMPTY) ===');
+        return '';
+      }
+      
+      let context = '';
+      let includedSections = [];
+      
+      // Always include profile information
+      if (selectedKeys.includes('profile') || selectedKeys.includes('profile')) {
+        context += `You are an AI assistant representing Andrew Aldrich.\n`;
+        context += `Title: ${andrewData.profile.title}\n`;
+        context += `About: ${andrewData.profile.description}\n`;
+        context += `Location: ${andrewData.profile.location}\n`;
+        context += `LinkedIn: ${andrewData.profile.linkedIn}\n\n`;
+        includedSections.push('profile');
+      }
 
-      context += `\n\nEducation:
-`;
-      andrewData.education.forEach(edu => {
-        context += `\n- ${edu.degree} from ${edu.school} (${edu.years})`;
-      });
+      if (selectedKeys.includes('skills')) {
+        context += `Skills: ${andrewData.skills.join(', ')}\n\n`;
+        includedSections.push('skills');
+      }
 
-      context += `\n\nCertifications:
-`;
-      andrewData.certificates.forEach(cert => {
-        context += `\n- ${cert.name} (${cert.issuer})`;
-      });
+      if (selectedKeys.includes('projects') && andrewData.projects) {
+        context += `Projects:\n`;
+        andrewData.projects.forEach(project => {
+          context += `- ${project.title}: ${project.description} (Tech: ${project.techUsed.join(', ')})\n`;
+        });
+        context += '\n';
+        includedSections.push('projects');
+      }
 
-      context += `\n\nInterests: Music (plays drums, piano, guitar), Photography, Video Creation
-Music Role: Music director at Johnston City United Pentecostal Church
-`;
+      if (selectedKeys.includes('education') && andrewData.education) {
+        context += `Education:\n`;
+        andrewData.education.forEach(edu => {
+          context += `- ${edu.degree} from ${edu.school} (${edu.years})\n`;
+        });
+        context += '\n';
+        includedSections.push('education');
+      }
 
+      if (selectedKeys.includes('certificates') && andrewData.certificates) {
+        context += `Certifications:\n`;
+        andrewData.certificates.forEach(cert => {
+          context += `- ${cert.name} (${cert.issuer})\n`;
+        });
+        context += '\n';
+        includedSections.push('certificates');
+      }
+
+      if (selectedKeys.includes('experience') && andrewData.experience) {
+        context += `Experience:\n`;
+        andrewData.experience.forEach(exp => {
+          context += `- ${exp.title} at ${exp.company} (${exp.years})\n`;
+        });
+        context += '\n';
+        includedSections.push('experience');
+      }
+
+      if (selectedKeys.includes('interests') && andrewData.interests) {
+        context += `Interests: ${JSON.stringify(andrewData.interests, null, 2)}\n\n`;
+        includedSections.push('interests');
+      }
+
+      console.log('Included sections:', includedSections);
+      console.log('Context length (chars):', context.length);
+      console.log('Context preview:', context.substring(0, 200) + '...');
+      console.log('=== buildContext END ===');
+      
       return context;
     }
 
-    // Generate response using WebLLM engine with streaming
+    // Generate response using WebLLM engine with smart context retrieval
     async function generateResponse(userQuestion) {
-      const context = buildContext();
+      console.log('=== generateResponse START ===');
+      console.log('User question:', userQuestion);
+      console.log('Model ready:', modelReady);
       
-      // If model is ready, try to use it
+      // If model is ready, use smart context retrieval
       if (modelReady && engine) {
         try {
-          statusText.textContent = 'AI is thinking...';
+          statusText.textContent = 'Analyzing question...';
+          console.log('Step 1: Requesting context keys...');
+          
+          // Ask LLM which context keys would be helpful
+          const contextKeys = await requestContextKeys(userQuestion);
+          console.log('Step 2: Received context keys:', contextKeys);
+          
+          // Create a thinking message based on context keys
+          const thinkingMessages = {
+            skills: "Looking at Andrew's technical skills...",
+            projects: "Reviewing Andrew's project experience...",
+            experience: "Checking Andrew's work history...",
+            education: "Considering Andrew's education...",
+            interests: "Exploring Andrew's interests...",
+            certificates: "Reviewing Andrew's certifications...",
+            profile: "Gathering profile information..."
+          };
+          
+          const thinkingText = contextKeys
+            .filter(key => thinkingMessages[key])
+            .map(key => thinkingMessages[key])
+            .join(' ');
+          
+          if (thinkingText) {
+            console.log('Thinking message:', thinkingText);
+            showMessage('bot', `<em>${thinkingText}</em>`);
+          }
+          
+          statusText.textContent = 'Preparing context...';
+          console.log('Step 3: Building context with selected keys...');
+          
+          // Build context with only relevant keys
+          const context = buildContext(contextKeys);
+          console.log('Step 4: Context prepared, length:', context.length);
+          
+          statusText.textContent = 'Generating response...';
+          console.log('Step 5: Generating AI response with streaming...');
           
           const systemPrompt = `You are an AI assistant representing Andrew Aldrich, a Full Stack Engineer. Answer questions about Andrew based on the context provided. Be conversational, friendly, and keep responses concise (2-3 sentences typically).`;
           
@@ -392,26 +571,77 @@ Music Role: Music director at Johnston City United Pentecostal Church
             }
           ];
 
+          console.log('Sending to LLM with', messages.length, 'messages');
+          console.log('Total prompt length:', messages.reduce((sum, m) => sum + m.content.length, 0), 'chars');
+
           // Use streaming for real-time response display
           const chunks = await engine.chat.completions.create({
             messages,
             temperature: 0.7,
             max_tokens: 300,
             stream: true,
+            stream_options: { include_usage: true },
           });
 
           let fullReply = "";
+          const botMessageId = 'bot-response-' + Date.now();
+          let botMessageElement = null;
+          
           for await (const chunk of chunks) {
-            fullReply += chunk.choices[0]?.delta.content || "";
+            const content = chunk.choices[0]?.delta.content || "";
+            fullReply += content;
+            
+            // Display content as it streams in
+            if (content) {
+              if (!botMessageElement) {
+                // Create new bot message on first chunk
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message bot';
+                messageDiv.id = botMessageId;
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'message-content';
+                contentDiv.id = botMessageId + '-content';
+                
+                messageDiv.appendChild(contentDiv);
+                messagesContainer.appendChild(messageDiv);
+                botMessageElement = contentDiv;
+              }
+              
+              // Update content with streamed text
+              botMessageElement.textContent += content;
+              
+              // Auto-scroll to bottom
+              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }
+            
+            // Log usage info from last chunk
+            if (chunk.usage) {
+              console.log('Step 6: Token usage:', chunk.usage);
+            }
           }
+          
+          const finalReply = await engine.getMessage();
+          console.log('Step 7: Final message from engine:', finalReply);
+          console.log('Step 8: Streamed response complete, total length:', fullReply.length);
+          console.log('Full response:', fullReply);
+          console.log('=== generateResponse END (SUCCESS) ===');
           
           return fullReply.trim() || getKnowledgeBasedResponse(userQuestion);
         } catch (error) {
-          console.error('Error generating response:', error);
+          console.error('Error in generateResponse:', error);
+          console.error('Error details:', {
+            name: error.name,
+            message: error.message,
+            stack: error.stack
+          });
+          console.log('=== generateResponse END (ERROR) - Falling back to knowledge base ===');
           return getKnowledgeBasedResponse(userQuestion);
         }
       }
       
+      console.log('Model not ready, using knowledge-based responses');
+      console.log('=== generateResponse END (FALLBACK) ===');
       // Fallback to knowledge-based responses
       return getKnowledgeBasedResponse(userQuestion);
     }
@@ -508,7 +738,13 @@ Music Role: Music director at Johnston City United Pentecostal Church
     async function handleSendMessage() {
       const message = userInput.value.trim();
       
-      if (!message) return;
+      console.log('=== handleSendMessage START ===');
+      console.log('User message:', message);
+      
+      if (!message) {
+        console.log('Message is empty, ignoring');
+        return;
+      }
       
       // Show user message
       showMessage('user', message);
@@ -519,18 +755,28 @@ Music Role: Music director at Johnston City United Pentecostal Church
       showTypingIndicator();
       loadingStatus.style.display = 'block';
       
+      console.log('UI updated: message displayed, input cleared, loading shown');
+      
       try {
         // Generate response
-        const response = await generateResponse(message);
+        console.log('Calling generateResponse...');
+        await generateResponse(message);
         
+        console.log('Response generation complete');
         removeTypingIndicator();
         loadingStatus.style.display = 'none';
-        showMessage('bot', response);
+        console.log('=== handleSendMessage END (SUCCESS) ===');
       } catch (error) {
-        console.error('Error:', error);
+        console.error('Error in handleSendMessage:', error);
+        console.error('Error details:', {
+          name: error.name,
+          message: error.message,
+          stack: error.stack
+        });
         removeTypingIndicator();
         loadingStatus.style.display = 'none';
         showMessage('bot', "Sorry, I encountered an error processing your question. Please try again.");
+        console.log('=== handleSendMessage END (ERROR) ===');
       } finally {
         sendBtn.disabled = false;
         userInput.focus();
@@ -548,9 +794,15 @@ Music Role: Music director at Johnston City United Pentecostal Church
 
     // Initialize on page load
     window.addEventListener('load', async () => {
+      console.log('=== PAGE LOAD START ===');
+      console.log('Page loaded, initializing application...');
+      
       await loadAndrewData();
       await initializeModel();
+      
       userInput.focus();
+      console.log('Application initialization complete');
+      console.log('=== PAGE LOAD COMPLETE ===');
     });
   </script>
 </body>
