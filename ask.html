@@ -626,7 +626,7 @@
         const availableKeys = getAvailableKeys();
         console.log('Available keys for LLM selection:', availableKeys);
         
-        const systemPrompt = `Select up to ${MAX_CONTEXT_KEYS} most relevant data keys from: ${availableKeys.join(', ')}. Include 'profile' if relevant. Reply: USECONTEXT key1, key2, key3`;
+        const systemPrompt = `Select up to ${MAX_CONTEXT_KEYS} most relevant data keys from: ${availableKeys.join(', ')}. Include 'profile' if relevant. Reply: USECONTEXT key1, key2`;
 
         const messages = [
           { role: "system", content: systemPrompt },
@@ -804,7 +804,7 @@
           statusText.textContent = 'Generating response...';
           console.log('Step 5: Generating AI response with streaming...');
           
-          const systemPrompt = `You are Andrew Aldrich's AI assistant. Answer briefly and conversationally in 2-3 sentences.`;
+          const systemPrompt = `You represent Andrew Aldrich, Full Stack Engineer. Answer briefly using provided context (2-3 sentences).`;
           
           const messages = [
             { role: "system", content: systemPrompt },
