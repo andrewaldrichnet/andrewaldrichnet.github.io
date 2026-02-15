@@ -804,7 +804,7 @@
           statusText.textContent = 'Generating response...';
           console.log('Step 5: Generating AI response with streaming...');
           
-          const systemPrompt = `You represent Andrew Aldrich, Full Stack Engineer. Answer briefly using provided context (2-3 sentences).`;
+          const systemPrompt = `You represent Andrew Aldrich, Full Stack Engineer. Answer briefly using only the provided context (2-3 sentences). If the answer isn't in the context, say you don't know.`;
           
           const messages = [
             { role: "system", content: systemPrompt },
