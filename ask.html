@@ -815,7 +815,7 @@ Choose only the keys that are necessary to answer the question well. Always incl
           // Use streaming for real-time response display
           const chunks = await engine.chat.completions.create({
             messages,
-            temperature: 0.7,
+            temperature: 0.3,
             max_tokens: 300,
             stream: true,
             stream_options: { include_usage: true },
