@@ -512,10 +512,11 @@
       try {
         console.log('=== Initializing WebLLM Model ===');
         console.log('Selected model:', selectedModel);
+        console.log('Current state - modelReady:', modelReady, 'engine exists:', !!engine);
         
         // Guard: If model is already ready and engine exists, skip initialization
         if (modelReady && engine) {
-          console.log('Model already initialized, skipping...');
+          console.log('Model already initialized and ready, skipping...');
           return;
         }
         
@@ -530,25 +531,25 @@
           return;
         }
 
+        // Clean up existing engine if any (e.g., from previous failed load)
+        if (engine) {
+          console.log('Cleaning up existing engine before reinitialization...');
+          try {
+            // Some WebLLM versions have a reset or unload method
+            if (typeof engine.unload === 'function') {
+              await engine.unload();
+            }
+          } catch (cleanupError) {
+            console.warn('Error during engine cleanup:', cleanupError);
+          }
+          engine = null;
+          modelReady = false;
+        }
+
         loadingStatus.style.display = 'block';
         statusText.textContent = 'Loading AI model... 0%';
         
         try {
-          // Clean up existing engine if any
-          if (engine) {
-            console.log('Cleaning up existing engine...');
-            try {
-              // Some WebLLM versions have a reset or unload method
-              if (typeof engine.unload === 'function') {
-                await engine.unload();
-              }
-            } catch (cleanupError) {
-              console.warn('Error during engine cleanup:', cleanupError);
-            }
-            engine = null;
-            modelReady = false;
-          }
-          
           engine = await webllm.CreateMLCEngine(
             selectedModel,
             { initProgressCallback: initProgressCallback }
