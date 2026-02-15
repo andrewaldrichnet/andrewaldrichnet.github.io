@@ -445,6 +445,12 @@
 
     // Load Andrew's data
     async function loadAndrewData() {
+      // Guard: Only load once
+      if (andrewData !== null) {
+        console.log('Andrew data already loaded, skipping...');
+        return;
+      }
+      
       console.log('Loading Andrew data from JSON...');
       try {
         const response = await fetch('/data/andrewData.json');
@@ -615,20 +621,13 @@
         const availableKeys = getAvailableKeys();
         console.log('Available keys for LLM selection:', availableKeys);
         
-        const systemPrompt = `You are a helpful assistant that determines which data context would be useful for answering a question about Andrew Aldrich. 
-
-Respond with ONLY the following format:
-USECONTEXT key1, key2, key3
-
-Where key1, key2, etc. are the relevant data categories from this list: ${availableKeys.join(', ')}
-
-Choose only the keys that are necessary to answer the question well. Always include 'profile' for context about who Andrew is.`;
+        const systemPrompt = `Select up to 3 relevant data keys from: ${availableKeys.join(', ')}. Reply: USECONTEXT key1, key2, key3`;
 
         const messages = [
           { role: "system", content: systemPrompt },
           { 
             role: "user", 
-            content: `Question: "${userQuestion}"\n\nWhich data keys from the available data would be helpful to answer this question? Respond with the USECONTEXT format only.`
+            content: `Question: "${userQuestion}"`
           }
         ];
 
@@ -656,21 +655,22 @@ Choose only the keys that are necessary to answer the question well. Always incl
           const requestedKeys = keysString
             .split(',')
             .map(k => k.trim())
-            .filter(k => availableKeys.includes(k));
+            .filter(k => availableKeys.includes(k))
+            .slice(0, 3); // Limit to maximum 3 keys for memory optimization
           
-          console.log('Parsed requested keys:', requestedKeys);
+          console.log('Parsed requested keys (limited to 3):', requestedKeys);
           console.log('=== requestContextKeys END (SUCCESS) ===');
           
-          return requestedKeys.length > 0 ? requestedKeys : availableKeys;
+          return requestedKeys.length > 0 ? requestedKeys : availableKeys.slice(0, 3);
         }
         
-        console.warn('No USECONTEXT format found in response, using all keys');
+        console.warn('No USECONTEXT format found in response, using up to 3 keys');
         console.log('=== requestContextKeys END (FALLBACK) ===');
-        return availableKeys;
+        return availableKeys.slice(0, 3);
       } catch (error) {
         console.error('Error requesting context keys:', error);
         console.log('=== requestContextKeys END (ERROR) ===');
-        return getAvailableKeys();
+        return getAvailableKeys().slice(0, 3);
       }
     }
 
@@ -799,13 +799,13 @@ Choose only the keys that are necessary to answer the question well. Always incl
           statusText.textContent = 'Generating response...';
           console.log('Step 5: Generating AI response with streaming...');
           
-          const systemPrompt = `You are an AI assistant representing Andrew Aldrich, a Full Stack Engineer. Answer questions about Andrew based on the context provided. Be conversational, friendly, and keep responses concise (2-3 sentences typically).`;
+          const systemPrompt = `You are Andrew Aldrich's AI assistant. Answer briefly based on context.`;
           
           const messages = [
             { role: "system", content: systemPrompt },
             { 
               role: "user", 
-              content: `Context about Andrew:\n${context}\n\nQuestion from visitor: ${userQuestion}\n\nProvide a helpful, accurate response about Andrew based on the context provided.`
+              content: `Context:\n${context}\n\nQuestion: ${userQuestion}`
             }
           ];
 
@@ -824,6 +824,8 @@ Choose only the keys that are necessary to answer the question well. Always incl
           let fullReply = "";
           const botMessageId = 'bot-response-' + Date.now();
           let botMessageElement = null;
+          let textBuffer = "";
+          const BATCH_SIZE = 20; // Batch updates to reduce layout thrashing
           
           for await (const chunk of chunks) {
             const content = chunk.choices[0]?.delta.content || "";
@@ -846,17 +848,27 @@ Choose only the keys that are necessary to answer the question well. Always incl
                 botMessageElement = contentDiv;
               }
               
-              // Update content with streamed text
-              botMessageElement.textContent += content;
-              
-              // Auto-scroll to bottom
-              messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              // Buffer content and update in batches to reduce layout updates
+              textBuffer += content;
+              if (textBuffer.length >= BATCH_SIZE) {
+                botMessageElement.textContent += textBuffer;
+                textBuffer = "";
+                
+                // Auto-scroll to bottom
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+              }
             }
             
             // Log usage info from last chunk
             if (chunk.usage) {
               console.log('Step 6: Token usage:', chunk.usage);
             }
+          }
+          
+          // Flush any remaining buffered text
+          if (textBuffer.length > 0 && botMessageElement) {
+            botMessageElement.textContent += textBuffer;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
           }
           
           const finalReply = await engine.getMessage();
@@ -1058,6 +1070,13 @@ Choose only the keys that are necessary to answer the question well. Always incl
       console.log('Page loaded, initializing application...');
       
       await loadAndrewData();
+      
+      // Wait 300ms after page load to start loading the model
+      // This helps release memory pressure on iOS Safari
+      console.log('Waiting 300ms before initializing model...');
+      await new Promise(resolve => setTimeout(resolve, 300));
+      console.log('Starting model initialization...');
+      
       await initializeModel();
       
       userInput.focus();
