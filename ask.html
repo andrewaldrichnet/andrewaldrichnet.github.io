@@ -690,7 +690,6 @@ Choose only the keys that are necessary to answer the question well. Always incl
       
       // Always include profile information
       if (selectedKeys.includes('profile') || selectedKeys.includes('profile')) {
-        context += `You are an AI assistant representing Andrew Aldrich.\n`;
         context += `Title: ${andrewData.profile.title}\n`;
         context += `About: ${andrewData.profile.description}\n`;
         context += `Location: ${andrewData.profile.location}\n`;
