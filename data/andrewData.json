@@ -74,6 +74,16 @@
       "title": "Lead Engineer",
       "company": "Brownells",
       "periods": ["April 2026 - Present"]
+    },
+    {
+      "title": "Senior Software Developer",
+      "company": "Cordance",
+      "periods": ["Sep 2020 - April 2026"]
+    },
+    {
+      "title": "Intern",
+      "company": "Cordance",
+      "periods": ["July 2016 - May 2019"]
     }
   ],
   "projects": [
