@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
   const downloadBtn = document.getElementById('downloadBtn');
 
   const DEFAULT_BASE_URL = 'https://api.openai.com/v1';
-  const DEFAULT_MODEL = 'gpt-4o-mini';
+  const DEFAULT_MODEL = 'gpt-5-mini';
 
   const STORAGE_KEY = 'aiwebpagebuilder_openai_key';
   const STORAGE_BASE_URL_KEY = 'aiwebpagebuilder_base_url';
@@ -144,7 +144,7 @@ document.addEventListener('DOMContentLoaded', function () {
       `Example output: \`\`\`${JSON.stringify(exampleOutput)}\`\`\`\n` +
       `Output complete accurate JSON format ONLY. ONLY use section ids from the following JSON: \`\`\`${JSON.stringify(sectionsJSON)}\`\`\``;
 
-    fetch(`${baseUrl}/chat/completions`, {
+    fetch(`${baseUrl}/responses`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -152,16 +152,16 @@ document.addEventListener('DOMContentLoaded', function () {
       },
       body: JSON.stringify({
         model: model,
-        messages: [
+        input: [
           {
             role: 'system',
-            content: 'You make webpages. Return sections with input fields given a topic and description. Only output JSON that includes relevant section ids and their specific suggested values for input requirements. Include ALL inputs. For image sources write a short prompt and size in this format {prompt||width x height}. Use bootstrap icons for icons.'
+            content: 'You make webpages. Return sections with input fields given a topic and description. Only output JSON that includes relevant section ids and their specific suggested values for input requirements. Include ALL inputs. For image sources write a short prompt and size in this format {prompt||width x height}. Use bootstrap icons for icons. Respond with ONLY a single ```json fenced code block containing the JSON — no other text before or after it.'
           },
           { role: 'user', content: prompt }
         ],
         temperature: 0.7,
-        max_tokens: 4096,
-        response_format: { type: 'json_object' }
+        max_output_tokens: 4096,
+        text: { format: { type: 'text' } }
       })
     })
       .then(async (response) => {
@@ -173,7 +173,7 @@ document.addEventListener('DOMContentLoaded', function () {
         return response.json();
       })
       .then((data) => {
-        const completion = data.choices?.[0]?.message?.content;
+        const completion = extractOutputText(data);
         if (!completion) throw new Error('The API returned an empty response.');
 
         const parsed = extractJsonContent(completion);
@@ -213,6 +213,18 @@ document.addEventListener('DOMContentLoaded', function () {
     previewFrame.srcdoc = finalHTML;
     resultsSection.style.display = 'block';
     resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function extractOutputText(data) {
+    if (typeof data.output_text === 'string' && data.output_text) return data.output_text;
+
+    const output = Array.isArray(data.output) ? data.output : [];
+    return output
+      .filter((item) => item.type === 'message')
+      .flatMap((item) => (Array.isArray(item.content) ? item.content : []))
+      .filter((part) => part.type === 'output_text' && typeof part.text === 'string')
+      .map((part) => part.text)
+      .join('');
   }
 
   function extractJsonContent(text) {

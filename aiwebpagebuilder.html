@@ -158,13 +158,13 @@
         <div class="field">
           <label for="baseUrl">API Base URL</label>
           <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" autocomplete="off" />
-          <p class="hint">The OpenAI-compatible base URL, without a trailing path. Requests are sent to <code>{baseUrl}/chat/completions</code>.</p>
+          <p class="hint">The OpenAI-compatible base URL, without a trailing path. Requests are sent to <code>{baseUrl}/responses</code>.</p>
         </div>
 
         <div class="field">
           <label for="model">Model</label>
           <div class="key-row">
-            <input type="text" id="model" list="modelList" placeholder="gpt-4o-mini" autocomplete="off" />
+            <input type="text" id="model" list="modelList" placeholder="gpt-5-mini" autocomplete="off" />
             <datalist id="modelList"></datalist>
             <button type="button" class="toggle-visibility" id="getModelsBtn">Get Models</button>
           </div>
