@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AI Web Page Builder | Andrew Aldrich</title>
+  <meta name="description" content="Generate a complete, styled webpage from a topic and description using AI — a live demo of Andrew Aldrich's Generative AI Dynamic Web Page Generator project." />
+  <meta name="robots" content="index, follow" />
+  <link rel="canonical" href="https://andrewaldrichnet.github.io/aiwebpagebuilder.html" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTBCHPVYPB"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FTBCHPVYPB');
+  </script>
+
+  <style>
+    :root{
+      --ink:#181c34;
+      --ink-2:#232849;
+      --paper:#f6f4ee;
+      --paper-2:#ebe8e0;
+      --line:rgba(24,28,52,0.12);
+      --line-light:rgba(246,244,238,0.16);
+      --accent:#3ebf6e;
+      --accent-soft:#d3f2df;
+      --muted:#69666b;
+      --muted-light:rgba(246,244,238,0.6);
+      --danger:#e35b5b;
+      --max:1100px;
+      --sans:"Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+      --ease:cubic-bezier(.16,.8,.2,1);
+    }
+    *{box-sizing:border-box;}
+    body{
+      margin:0;font-family:var(--sans);color:#fff;background:var(--ink);
+      -webkit-font-smoothing:antialiased;line-height:1.6;
+    }
+    a{color:inherit;}
+    .wrap{max-width:var(--max);margin:0 auto;padding:0 24px;}
+
+    header.topbar{padding:22px 0;border-bottom:1px solid rgba(255,255,255,0.08);}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;}
+    .back-link{display:inline-flex;align-items:center;gap:8px;color:var(--muted-light);font-size:0.9rem;font-weight:600;text-decoration:none;transition:color .2s ease;}
+    .back-link:hover{color:#fff;}
+    .brand{font-size:0.95rem;font-weight:800;letter-spacing:-0.01em;text-transform:uppercase;color:#fff;}
+
+    .hero{padding:56px 0 8px;}
+    .eyebrow{font-size:0.7rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--accent);font-weight:700;margin-bottom:14px;display:inline-block;}
+    h1{font-size:clamp(1.9rem,4vw,2.6rem);font-weight:800;letter-spacing:-0.02em;margin:0 0 14px;}
+    .hero p.lede{color:var(--muted-light);font-size:1.05rem;max-width:640px;margin:0;}
+
+    .panel{background:var(--ink-2);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:32px;margin-top:32px;}
+    .panel h2{font-size:1.15rem;margin:0 0 6px;font-weight:800;}
+    .panel .sub{color:var(--muted-light);font-size:0.9rem;margin:0 0 24px;}
+
+    label{display:block;font-size:0.85rem;font-weight:600;color:var(--muted-light);margin-bottom:8px;}
+    .field{margin-bottom:20px;}
+    .hint{font-size:0.78rem;color:var(--muted-light);margin-top:6px;}
+    .hint a{color:var(--accent);text-decoration:underline;}
+
+    input[type="password"],
+    input[type="text"],
+    textarea{
+      width:100%;padding:12px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.14);
+      background:rgba(255,255,255,0.04);color:#fff;font-family:var(--sans);font-size:0.95rem;
+      transition:border-color .2s ease, background .2s ease;
+    }
+    input[type="password"]::placeholder,
+    input[type="text"]::placeholder,
+    textarea::placeholder{color:rgba(255,255,255,0.32);}
+    input:focus,textarea:focus{outline:none;border-color:var(--accent);background:rgba(255,255,255,0.06);}
+    textarea{resize:vertical;min-height:96px;font-family:var(--sans);}
+
+    .key-row{display:flex;gap:10px;align-items:stretch;}
+    .key-row input{flex:1;}
+    .toggle-visibility{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.14);color:var(--muted-light);
+      border-radius:8px;padding:0 14px;cursor:pointer;font-size:0.85rem;font-weight:600;white-space:nowrap;}
+    .toggle-visibility:hover{color:#fff;border-color:rgba(255,255,255,0.3);}
+
+    .checkbox-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+    .checkbox-row input{width:auto;}
+    .checkbox-row label{margin:0;font-weight:400;color:var(--muted-light);font-size:0.82rem;}
+
+    .btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;padding:14px 28px;font-size:0.92rem;font-weight:700;
+      border-radius:100px;cursor:pointer;border:none;letter-spacing:0.01em;width:100%;
+      background:var(--accent);color:#fff;transition:transform .2s var(--ease),background .2s ease,opacity .2s ease;}
+    .btn:hover:not(:disabled){transform:translateY(-2px);background:#1f7a4d;}
+    .btn:disabled{opacity:0.6;cursor:not-allowed;transform:none;}
+
+    .spinner{display:none;width:16px;height:16px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;
+      border-radius:50%;animation:spin .8s linear infinite;}
+    @keyframes spin{to{transform:rotate(360deg);}}
+
+    .status-box{margin-top:18px;padding:12px 16px;border-radius:10px;font-size:0.88rem;display:none;}
+    .status-info{background:rgba(62,191,110,0.12);color:var(--accent-soft);border:1px solid rgba(62,191,110,0.3);}
+    .status-success{background:rgba(62,191,110,0.16);color:#c9f5da;border:1px solid rgba(62,191,110,0.4);}
+    .status-error{background:rgba(227,91,91,0.14);color:#ffd3d3;border:1px solid rgba(227,91,91,0.4);}
+
+    .results{display:none;margin-top:32px;}
+    .results h2{font-size:1.05rem;margin:0 0 14px;}
+    .preview-frame-wrap{border:1px solid rgba(255,255,255,0.1);border-radius:12px;overflow:hidden;background:#fff;}
+    #previewFrame{width:100%;height:520px;border:0;display:block;}
+
+    .code-head{display:flex;align-items:center;justify-content:space-between;margin:28px 0 12px;flex-wrap:wrap;gap:12px;}
+    .code-head h2{margin:0;}
+    .code-actions{display:flex;gap:10px;}
+    .btn-small{width:auto;padding:9px 18px;font-size:0.82rem;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.16);}
+    .btn-small:hover:not(:disabled){background:rgba(255,255,255,0.14);}
+    #generatedHtml{font-family:"SF Mono", Menlo, Consolas, monospace;font-size:0.78rem;min-height:260px;color:#c9f5da;background:rgba(0,0,0,0.3);}
+
+    .how-it-works{margin-top:48px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.08);}
+    .how-it-works h2{font-size:1.05rem;margin:0 0 18px;}
+    .steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:20px;}
+    .step .n{color:var(--accent);font-weight:800;font-size:0.85rem;letter-spacing:0.05em;}
+    .step p{color:var(--muted-light);font-size:0.88rem;margin:6px 0 0;}
+
+    footer{padding:40px 0 60px;text-align:center;color:var(--muted-light);font-size:0.8rem;}
+
+    @media (max-width:640px){
+      .panel{padding:22px;}
+      .key-row{flex-direction:column;}
+    }
+  </style>
+</head>
+
+<body>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <a href="index.html" class="back-link">&larr; Back to Homepage</a>
+      <span class="brand">Andrew Aldrich</span>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Live Demo</span>
+      <h1>AI Web Page Builder</h1>
+      <p class="lede">Describe a topic, and AI picks from a library of pre-built, styled sections and fills them in — generating a complete, ready-to-use webpage in seconds. This is a live version of my <a href="index.html#aiwebpagegenerator" style="color:var(--accent);">Generative AI Dynamic Web Page Generator</a> project.</p>
+    </div>
+  </section>
+
+  <div class="wrap">
+    <div class="panel">
+      <h2>Generate a page</h2>
+      <p class="sub">Bring your own API key — it's used only to call your chosen provider directly from your browser and is never sent anywhere else. Works with OpenAI or any OpenAI-compatible endpoint (Azure OpenAI, OpenRouter, Groq, a local server, etc).</p>
+
+      <form id="builderForm">
+        <div class="field">
+          <label for="baseUrl">API Base URL</label>
+          <input type="text" id="baseUrl" placeholder="https://api.openai.com/v1" autocomplete="off" />
+          <p class="hint">The OpenAI-compatible base URL, without a trailing path. Requests are sent to <code>{baseUrl}/chat/completions</code>.</p>
+        </div>
+
+        <div class="field">
+          <label for="model">Model</label>
+          <div class="key-row">
+            <input type="text" id="model" list="modelList" placeholder="gpt-4o-mini" autocomplete="off" />
+            <datalist id="modelList"></datalist>
+            <button type="button" class="toggle-visibility" id="getModelsBtn">Get Models</button>
+          </div>
+          <p class="hint" id="modelsHint">Fetches available models from <code>{baseUrl}/models</code> using your API key, then lists them here.</p>
+        </div>
+
+        <div class="field">
+          <label for="openaiKey">API Key</label>
+          <div class="key-row">
+            <input type="password" id="openaiKey" placeholder="sk-..." autocomplete="off" required />
+            <button type="button" class="toggle-visibility" id="toggleKeyVisibility">Show</button>
+          </div>
+          <div class="checkbox-row">
+            <input type="checkbox" id="rememberKey" />
+            <label for="rememberKey">Remember key, base URL &amp; model on this device</label>
+          </div>
+          <p class="hint">Don't have an OpenAI key? Create one at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>.</p>
+        </div>
+
+        <div class="field">
+          <label for="topic">Topic</label>
+          <input type="text" id="topic" placeholder="e.g. AI in E-Commerce" required />
+        </div>
+
+        <div class="field">
+          <label for="description">Description</label>
+          <textarea id="description" placeholder="A brief description of what the page should cover..." required></textarea>
+        </div>
+
+        <button type="submit" class="btn" id="generate-btn">
+          <span class="spinner" id="generate-spinner"></span>
+          <span id="generate-btn-label">Generate Webpage</span>
+        </button>
+
+        <div class="status-box" id="statusBox"></div>
+      </form>
+
+      <div class="results" id="resultsSection">
+        <h2>Preview</h2>
+        <div class="preview-frame-wrap">
+          <iframe id="previewFrame" title="Generated page preview" sandbox=""></iframe>
+        </div>
+
+        <div class="code-head">
+          <h2>Generated HTML</h2>
+          <div class="code-actions">
+            <button type="button" class="btn btn-small" id="copyBtn">Copy</button>
+            <button type="button" class="btn btn-small" id="downloadBtn">Download .html</button>
+          </div>
+        </div>
+        <textarea id="generatedHtml" readonly></textarea>
+      </div>
+
+      <div class="how-it-works">
+        <h2>How it works</h2>
+        <div class="steps">
+          <div class="step"><div class="n">01</div><p>You describe a topic and the page's purpose.</p></div>
+          <div class="step"><div class="n">02</div><p>AI picks the best-fit sections from a library of pre-built, styled HTML templates.</p></div>
+          <div class="step"><div class="n">03</div><p>The model fills in copy, headlines, and image prompts for each section's inputs.</p></div>
+          <div class="step"><div class="n">04</div><p>Sections are assembled into one Bootstrap-styled page you can preview, copy, or download.</p></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    &copy; <span id="year"></span> Andrew Aldrich
+  </footer>
+
+  <script src="aiwebpagebuilder/template-html.js"></script>
+  <script src="aiwebpagebuilder/sections-html.js"></script>
+  <script src="aiwebpagebuilder/sections.js"></script>
+  <script src="aiwebpagebuilder/script.js"></script>
+  <script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+    document.getElementById('toggleKeyVisibility').addEventListener('click', function () {
+      const input = document.getElementById('openaiKey');
+      const isPassword = input.type === 'password';
+      input.type = isPassword ? 'text' : 'password';
+      this.textContent = isPassword ? 'Hide' : 'Show';
+    });
+  </script>
+</body>
+
+</html>
