@@ -1,0 +1,2063 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#0f120e">
+<title>Tank Battle</title>
+<style>
+  :root { --ui: ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 50% 40%, #1c2119, #0b0d0a 75%); color: #d8dde6; font: 13px/1.4 var(--ui); }
+  body { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+  canvas { background: #2b3028; box-shadow: 0 0 0 2px #2c3328, 0 12px 40px #000a; border-radius: 6px; max-width: 100vw; width: min(100vw, calc((100dvh - 48px) * 1.5)); height: auto; aspect-ratio: 3 / 2; cursor: crosshair; display: block; touch-action: none; }
+  :fullscreen #bar { display: none; }
+  :fullscreen canvas { width: min(100vw, calc(100dvh * 1.5)); border-radius: 0; }
+  canvas.hurt { animation: hurt .55s ease-out; }
+  @keyframes hurt {
+    0%   { box-shadow: 0 0 0 3px #ff3b2f, 0 0 46px 10px #ff2a1fcc, inset 0 0 0 3px #ff3b2f; }
+    100% { box-shadow: 0 0 0 2px #2c3328, 0 12px 40px #000a; }
+  }
+  html, body { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; -webkit-tap-highlight-color: transparent; }
+  #rotate { display: none; color: #ffd28a; }
+  #padHelp { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; background: #080a07d9; font-family: system-ui, sans-serif; }
+  #padHelp[hidden] { display: none; }
+  #padHelp .card { background: #1a2018; border: 2px solid #8fd8f655; border-radius: 12px; padding: 22px 28px; max-width: min(92vw, 520px); color: #e6ebdd; box-shadow: 0 12px 40px #000c; }
+  #padHelp h2 { margin: 0 0 2px; font-size: 22px; }
+  #padHelp .sub { margin: 0 0 14px; color: #9aa493; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #padHelp table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  #padHelp td { padding: 5px 0; vertical-align: top; }
+  #padHelp td:first-child { white-space: nowrap; padding-right: 18px; }
+  #padHelp kbd { background: #2c3328; border: 1px solid #55604f; border-radius: 4px; padding: 1px 6px; font: 600 12px ui-monospace, monospace; }
+  #padHelp .go { margin: 16px 0 0; text-align: center; color: #ffd28a; font-weight: 600; font-size: 13px; }
+  #game { display: flex; align-items: center; justify-content: center; }
+  #bar { color: #9aa493; letter-spacing: .02em; }
+  #bar b { color: #e6ebdd; font-weight: 600; }
+  .pad { display: none; }
+  @media (pointer: coarse) {
+    html, body { position: fixed; inset: 0; overflow: hidden; overscroll-behavior: none; touch-action: none; }
+    body { gap: 0; }
+    #bar { display: none; }
+    #game { width: 100vw; height: 100dvh; }
+    canvas { height: min(100dvh, calc((100vw - 210px) / 1.5)); width: auto; aspect-ratio: 3 / 2; max-width: none; cursor: default; border-radius: 4px; }
+    /* thumb pads live in the gutters beside the canvas, so no thumb ever covers the playfield */
+    .pad { display: flex; flex: 1 1 0; min-width: 0; height: 100%; flex-direction: column; align-items: center; justify-content: center; gap: 10px; touch-action: none; }
+    .ring { position: relative; display: grid; place-items: center; width: min(90%, 170px, 46dvh); aspect-ratio: 1; border-radius: 50%;
+            border: 2px solid #8fd8f655;
+            background: radial-gradient(circle at 50% 38%, #ffffff1c, #ffffff08 55%, transparent 72%), rgba(18, 26, 22, .62);
+            box-shadow: inset 0 0 22px #8fd8f622, inset 0 -6px 16px #0007, 0 6px 20px #000a, 0 0 14px #8fd8f622; }
+    .knob { width: 38%; aspect-ratio: 1; border-radius: 50%; pointer-events: none; will-change: transform;
+            background: radial-gradient(circle at 34% 28%, #e4f7ff, #78c3e2 52%, #2c6d89);
+            box-shadow: 0 5px 12px #000a, inset 0 -4px 8px #0004, inset 0 2px 3px #fff8; }
+    #ringR { border-color: #ffb34766; box-shadow: inset 0 0 22px #ffb34722, inset 0 -6px 16px #0007, 0 6px 20px #000a, 0 0 14px #ffb34722; }
+    #ringR .knob { background: radial-gradient(circle at 34% 28%, #fff0d0, #ffb347 52%, #a8651a); }
+    .fz { position: absolute; inset: 22.5%; border-radius: 50%; border: 2px dashed #ffb347aa; pointer-events: none; }   /* push past this to fire */
+    .label { font-size: 10.5px; line-height: 1.3; color: #ffffff99; text-align: center; pointer-events: none; max-width: 100%; padding: 0 6px; box-sizing: border-box;
+             letter-spacing: .12em; text-transform: uppercase; font-weight: 600; }
+    /* homing missile button */
+    #fireBtn { position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; gap: 9px;
+               width: min(84%, 138px); height: min(14dvh, 56px); border-radius: 30px; border: 2px solid #ffc9a6aa; touch-action: none; color: #fff;
+               background: linear-gradient(#ff8f50, #d6401d 70%, #b02f12); box-shadow: 0 6px 16px #000b, inset 0 2px 0 #fff5, inset 0 -3px 6px #0005; }
+    #fireBtn .rk { width: 38px; height: 19px; flex: none; filter: drop-shadow(0 1px 2px #0008); }
+    #fireBtn .pips { display: flex; gap: 5px; }
+    #fireBtn .pips i { width: 9px; height: 22px; border-radius: 4px; background: #0005; border: 1px solid #fff6; transition: background .12s, box-shadow .12s; }
+    #fireBtn .pips i.on { background: linear-gradient(#fffbd2, #ffcf4d); box-shadow: 0 0 9px #ffd05a; border-color: #fff; }
+    #fireBtn .prog { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: #fff; opacity: .9; }
+    #fireBtn.held { transform: scale(.95); filter: brightness(1.18); }
+    #fireBtn.empty { filter: grayscale(.75) brightness(.72); }
+  }
+  @media (pointer: coarse) and (orientation: portrait) {
+    /* portrait: playfield across the top, thumb pads side by side underneath */
+    #game { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: auto minmax(0, 1fr); align-items: stretch; justify-items: stretch;
+            padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom); box-sizing: border-box; }
+    canvas { grid-column: 1 / -1; grid-row: 1; width: 100%; height: auto; border-radius: 0; align-self: start; }
+    #padL { grid-column: 1; grid-row: 2; }
+    #padR { grid-column: 2; grid-row: 2; }
+    /* both pads start at the same height so the two rings line up; the missile button drops below the aim ring */
+    .pad { justify-content: flex-end; padding-bottom: 3dvh; box-sizing: border-box; }
+    #padL::before { content: ""; height: min(14dvh, 56px); }   /* same height as the missile button so the rings stay level */
+  }
+</style>
+</head>
+<body>
+<div id="bar">
+  <b>WASD</b> move · <b>mouse</b> aim · <b>SPACE</b>/<b>click</b> cannon · hold <b>P</b>/<b>V</b>: lock-on missile · <b>TAB</b> brain overlay · <b>ESC</b> pause · <b>M</b> level map · <b>F</b> fullscreen · controller supported
+</div>
+<div id="padHelp" role="dialog" aria-label="Controller controls" hidden>
+  <div class="card">
+    <h2>Controller connected</h2>
+    <p class="sub" id="padName"></p>
+    <table>
+      <tr><td><kbd>Left stick</kbd></td><td>Move</td></tr>
+      <tr><td><kbd>Right stick</kbd></td><td>Aim (push to steer the turret)</td></tr>
+      <tr><td><kbd>RT</kbd> / <kbd>A</kbd> / <kbd>&#x2715;</kbd></td><td>Fire cannon</td></tr>
+      <tr><td><kbd>LT</kbd> / <kbd>LB</kbd> / <kbd>X</kbd></td><td>Hold to lock a missile on an enemy</td></tr>
+      <tr><td><kbd>RB</kbd></td><td>Launch the locked missile</td></tr>
+      <tr><td><kbd>Start</kbd></td><td>Pause / resume</td></tr>
+      <tr><td><kbd>Select</kbd> / <kbd>Y</kbd></td><td>Level map</td></tr>
+      <tr><td><kbd>D-pad</kbd></td><td>Move (when the stick is idle) &middot; menus</td></tr>
+    </table>
+    <p class="go">Press any button to continue</p>
+  </div>
+</div>
+<div id="rotate">Rotate your phone to landscape ↻</div>
+<div id="game">
+  <div class="pad" id="padL">
+    <div class="ring" id="ringL"><div class="knob" id="knobL"></div></div>
+    <div class="label">Move</div>
+  </div>
+  <canvas id="c" width="960" height="640"></canvas>
+  <div class="pad" id="padR">
+    <button id="fireBtn" type="button" aria-label="Launch homing missile">
+      <svg class="rk" viewBox="0 0 40 20"><path d="M6 6h22v8H6z" fill="#eef2f6" rx="3"/><path d="M28 6l10 4-10 4z" fill="#ff5a2c"/><path d="M6 6L1 1l11 5zM6 14l-5 5 11-5z" fill="#aab3b0"/><path d="M6 8H2l-1 2 1 2h4z" fill="#ffd05a"/></svg>
+      <span class="pips"><i id="pip0"></i><i id="pip1"></i><i id="pip2"></i></span>
+      <span class="prog" id="prog"></span>
+    </button>
+    <div class="ring" id="ringR"><div class="fz"></div><div class="knob" id="knobR"></div></div>
+    <div class="label">Aim · push out for cannon</div>
+  </div>
+</div>
+<script>
+"use strict";
+const W = 960, H = 640;                     // the screen (canvas) size
+let WW = W, WH = H;                         // the level's world size; bigger than the screen on adventure maps
+const cam = { x: 0, y: 0 };                 // top-left of the visible window in the world
+const cv = document.getElementById("c"), g = cv.getContext("2d");
+const $ = id => document.getElementById(id);
+const FONT = 'ui-rounded, "SF Pro Rounded", system-ui, -apple-system, "Segoe UI", sans-serif';
+
+// ---------- config ----------
+const THINK_MS = 350;          // min gap between JEV batch calls
+const ORDER_TTL = 1.8;         // seconds an order stays valid
+const TANK_SCALE = 1.3;        // drawn size AND hit radius of every tank (1 = the original size)
+const P_SPEED = 150, E_SPEED = 105;
+const P_BULLET = 380, E_BULLET = 250;
+const ENEMY_AIM_GATE = 0.05;   // rad: an enemy only fires once its turret is this close to the aim (was 0.1)
+// The longer the player stands still, the better enemies hit: scatter and the alignment gate shrink over STILL_RAMP seconds.
+const STILL_RAMP = 1.0, STILL_SPREAD = 0.1, STILL_GATE = 0.02;   // end values (fraction of scatter; gate in rad)
+const SIGHT_RANGE = 720;       // enemies only aim at you (and shoot) once they can see you: line of sight within this distance
+const ALERT_SHARE = 380;       // an enemy that spots you (or is hit) wakes allies this close
+const RAGE = { speed: 1.3, fire: 1.4, sight: 1.6, turn: 1.4, range: 1.3 };   // enemy boosts while you hold the flag
+const ENEMY_FIRE_RANGE = 500;  // enemies never shoot (or get the aim-and-shoot option) from farther away; same as the "far" bucket
+// Player's heat-seeking missiles: a few charges, fast, quick to launch in a row, they steer onto the hottest target in front.
+const MISSILE_MAX = 3, MISSILE_RELOAD = 5.0, MISSILE_GAP = 0.2;   // charges, seconds to regain one, seconds between launches
+const MISSILE_SPEED = 480, MISSILE_TURN = 2.8, MISSILE_LIFE = 3.2, MISSILE_DMG = 2;
+const SHELL_TURN = 0.35, SHELL_CONE = 0.3;                       // cannon shell fired while locked on: max curve (rad/s) and only if the target is within this angle
+// Phone cannon auto-lock: there is no lock button on touch, so a cannon shot fired off the aim pad locks the enemy nearest the aim
+// line (clear shot, in range) and bends much harder onto it than the keyboard/mouse lock-on shell does.
+const TOUCH_LOCK_CONE = 0.5, TOUCH_LOCK_RANGE = 720, TOUCH_SHELL_TURN = 1.3, TOUCH_SHELL_CONE = 0.7;   // cone/shell cone: rad; turn: rad/s
+const LOCK_TIME = 0.9;                                           // hold MISSILE this long on a target to lock; then missiles fire
+const SEEK_RANGE = 700, SEEK_CONE = 1.1;                          // seeker: range (px) and half-angle (rad) in front of the missile
+
+// ---------- JEV decision schema ----------
+// One short question per tank, scored against a shared battlefield summary.
+const MOVE_OPTS = [
+  { id: "dodge",  description: "dodge" },
+  { id: "charge", description: "charge" },
+  { id: "back",   description: "back off" },
+  { id: "left",   description: "circle left" },
+  { id: "right",  description: "circle right" },
+  { id: "snipe",  description: "stand and aim" },
+  { id: "wait",   description: "wait" },
+];
+const DODGE_TEMP = 0.6;      // sampling temperature cap while a dodge is on offer
+const MAX_PER_CALL = 3;      // tanks decided per JEV call (rotates if more)
+let rr = 0;                  // round-robin cursor
+
+// ---------- levels ----------
+const WALL_SETS = [
+  [[736,235,178,24],[736,381,178,24],[890,259,24,122]],                      // Boot Camp: 3-sided pen around the enemy, open toward the player
+  [[430,220,100,200]],
+  [[200,120,30,160],[730,360,30,160],[430,290,100,60]],
+  [[160,160,200,28],[600,452,200,28],[450,200,60,240]],
+  [[120,120,30,150],[810,370,30,150],[300,300,360,28],[450,100,60,100],[450,440,60,100]],
+];
+const LEVELS = [
+  { name: "Boot Camp",     n: 1, kinds: ["grunt"], spawn: [[820, 320]], hp: 2, temp: 1.4, reflex: 0.15, lead: 0.45, turn: 4.0, err: 0.16,  cd: 1.8 },
+  { name: "Crossfire",     n: 2, kinds: ["grunt", "gunner"], hp: 2, temp: 1.2, reflex: 0.2,  lead: 0.6,  turn: 4.5, err: 0.125, cd: 1.5,
+    moats: [[170, 430, 170, 56], [620, 150, 170, 56]] },
+  { name: "Pillbox",       n: 3, kinds: ["heavy", "grunt", "gunner"], hp: 3, temp: 1.0, reflex: 0.25, lead: 0.75, turn: 5.0, err: 0.10,  cd: 1.35,
+    moats: [[620, 60, 56, 230], [100, 380, 230, 50]] },
+  // ---- adventure maps: bigger than the screen (the camera follows you); enemies stand guard until they spot you ----
+  { name: "Iron Pack",     n: 4, kinds: ["heavy", "gunner", "grunt", "grunt"], hp: 3, temp: 0.8, reflex: 0.3, lead: 0.9, turn: 6.0, err: 0.07, cd: 1.15,
+    world: [1920, 640], idle: true, player: [80, 320],
+    moats: [[900, 0, 60, 270], [900, 370, 60, 270]],                                                           // river with one bridge
+    walls: [[300, 120, 40, 160], [300, 380, 40, 160], [600, 300, 120, 40], [1200, 100, 200, 28], [1200, 512, 200, 28], [1500, 200, 40, 240], [1700, 120, 28, 120], [1700, 400, 28, 120]],
+    spawn: [[1650, 320], [1300, 330], [1080, 170], [1080, 470]] },
+  { name: "Final Assault", n: 5, kinds: ["heavy", "heavy", "gunner", "gunner", "grunt"], hp: 4, temp: 0.6, reflex: 0.35, lead: 1.0, turn: 7.0, err: 0.045, cd: 1.0,
+    world: [1920, 1280], idle: true, player: [80, 640],
+    moats: [[560, 0, 60, 500], [560, 640, 60, 640], [1000, 900, 500, 60], [1620, 900, 300, 60]],
+    walls: [[260, 300, 200, 28], [260, 900, 200, 28], [800, 200, 28, 260], [800, 760, 28, 300], [1000, 560, 300, 28], [1300, 300, 28, 200], [1500, 600, 28, 200], [1700, 200, 200, 28], [1200, 1100, 28, 140], [1700, 1050, 28, 150]],
+    spawn: [[1750, 420], [1500, 1100], [1100, 300], [1000, 1040], [900, 640]] },
+  { name: "Capture the Flag", n: 5, kinds: ["heavy", "gunner", "gunner", "grunt", "grunt"], hp: 3, temp: 0.7, reflex: 0.3, lead: 0.9, turn: 6.0, err: 0.06, cd: 1.1,
+    world: [1920, 960], idle: true, player: [110, 480],
+    ctf: { base: [110, 480], flag: [1800, 480] },                                // OBJECTIVE: take their flag, bring it back to your base
+    moats: [[700, 0, 70, 380], [700, 580, 70, 380], [1450, 0, 70, 240], [1450, 720, 70, 240]],
+    walls: [[500, 200, 28, 220], [500, 540, 28, 220], [900, 100, 28, 260], [900, 600, 28, 260], [1300, 300, 28, 160], [1300, 500, 28, 160], [1600, 150, 200, 28], [1600, 780, 200, 28]],
+    spawn: [[1720, 480], [1650, 300], [1650, 660], [1200, 230], [1200, 730]] },
+  { name: "River Run",     n: 6, kinds: ["grunt", "grunt", "gunner", "heavy", "gunner", "heavy"], hp: 4, temp: 0.55, reflex: 0.35, lead: 1.0, turn: 7.0, err: 0.05, cd: 1.0,
+    world: [2400, 960], idle: true, player: [80, 480],
+    moats: [[700, 0, 80, 400], [700, 560, 80, 400], [1500, 0, 80, 200], [1500, 360, 80, 600]],               // two rivers, a narrow bridge in each
+    walls: [[300, 200, 28, 200], [300, 600, 28, 200], [1000, 150, 200, 28], [1000, 780, 200, 28], [1100, 400, 28, 200], [1900, 200, 28, 220], [1900, 560, 28, 220], [2100, 380, 200, 28]],
+    spawn: [[950, 300], [950, 680], [1300, 480], [2050, 480], [2200, 250], [2250, 700]] },
+  { name: "Fortress Ruins", n: 7, kinds: ["grunt", "grunt", "gunner", "gunner", "heavy", "heavy", "grunt"], hp: 4, temp: 0.5, reflex: 0.38, lead: 1.0, turn: 7.5, err: 0.045, cd: 0.95,
+    world: [2400, 1280], idle: true, player: [80, 640],
+    moats: [[1440, 320, 720, 60], [1440, 900, 720, 60], [1440, 380, 60, 200], [1440, 700, 60, 200], [2100, 380, 60, 520]],   // a moat around the fortress, one drawbridge on the west side
+    walls: [[400, 300, 28, 200], [400, 780, 28, 200], [900, 500, 28, 280], [1200, 640, 120, 28], [300, 1100, 200, 28], [1650, 500, 28, 160], [1650, 740, 28, 120]],
+    spawn: [[1100, 300], [1100, 980], [800, 640], [1760, 500], [1960, 560], [1960, 760], [2250, 640]] },
+  { name: "Last Stand",    n: 8, kinds: ["grunt", "grunt", "gunner", "gunner", "heavy", "heavy", "gunner", "heavy"], hp: 5, temp: 0.45, reflex: 0.4, lead: 1.0, turn: 8.0, err: 0.04, cd: 0.9,
+    world: [2880, 1280], idle: true, player: [80, 640],
+    moats: [[800, 0, 60, 560], [800, 720, 60, 560], [1700, 0, 60, 200], [1700, 360, 60, 560], [1700, 1080, 60, 200]],
+    walls: [[300, 300, 28, 240], [300, 740, 28, 240], [1000, 500, 200, 28], [1000, 760, 200, 28], [1400, 200, 28, 200], [1400, 880, 28, 200], [1950, 500, 28, 280], [2200, 200, 200, 28], [2200, 1050, 200, 28], [2450, 420, 28, 160], [2450, 700, 28, 160]],
+    spawn: [[1100, 300], [1100, 980], [1300, 640], [1500, 400], [2000, 300], [2000, 1000], [2300, 640], [2650, 640]] },
+];
+// enemy types: grunt (red, standard), heavy (blue, twice the armor, slower, bigger), gunner (yellow, fires about twice as fast, sprays wider)
+const KINDS = {
+  grunt:  { label: "Grunt",  hp: 1,   cd: 1,    spd: 1,    sz: 1,    err: 1 },
+  heavy:  { label: "Heavy",  hp: 2,   cd: 1.15, spd: 0.65, sz: 1.18, err: 1 },
+  gunner: { label: "Gunner", hp: 0.7, cd: 0.5,  spd: 1.1,  sz: 1,    err: 1.3 },
+};
+const ENDLESS_MIX = ["heavy", "gunner", "grunt", "heavy", "gunner", "gunner"];
+const levelKinds = i => { const c = levelCfg(i); return (c.kinds || ENDLESS_MIX).slice(0, c.n); };
+const wallSet = i => WALL_SETS[i < WALL_SETS.length ? i : 1 + (i - WALL_SETS.length) % (WALL_SETS.length - 1)];
+// ---------- difficulty (hard = the original tuning) ----------
+// php: player hp · hp/cd/err: enemy hp, reload time, aim-error multipliers · reflex: dodge chance · temp: JEV randomness
+// spd/bullet/sight: enemy speed, shell speed, sight range · dn: enemies added (+) or removed (-)
+const DIFFS = {
+  easy:   { label: "EASY",   php: 8, hp: 0.6,  cd: 1.6,  err: 1.8, reflex: 0.3,  temp: 1.5,  spd: 0.8,  bullet: 0.8, sight: 0.8,  dn: -2 },
+  medium: { label: "MEDIUM", php: 6, hp: 0.8,  cd: 1.25, err: 1.35, reflex: 0.65, temp: 1.2,  spd: 0.9,  bullet: 0.9, sight: 0.9,  dn: -1 },
+  hard:   { label: "HARD",   php: 5, hp: 1,    cd: 1,    err: 1,   reflex: 1,    temp: 1,    spd: 1,    bullet: 1,   sight: 1,    dn: 0 },
+  expert: { label: "EXPERT", php: 4, hp: 1.3,  cd: 0.75, err: 0.6, reflex: 1.6,  temp: 0.75, spd: 1.12, bullet: 1.2, sight: 1.15, dn: 0 },
+};
+const DIFF_ORDER = ["easy", "medium", "hard", "expert"], DIFF_KEY = "tankbattle.difficulty";
+let diffName = "hard", D = DIFFS.hard;
+function setDiff(n) { if (!DIFFS[n]) return; diffName = n; D = DIFFS[n]; cfgCache = {}; store("set", DIFF_KEY, n); }
+function stepDiff(d) { setDiff(DIFF_ORDER[clamp(DIFF_ORDER.indexOf(diffName) + d, 0, DIFF_ORDER.length - 1)]); }
+let cfgCache = {};
+// game modes: campaign (the level map), ctf (a fresh random capture-the-flag map every game), free (freestyle: unkillable you vs. endless spawning foes)
+const CUSTOM = -1, FREE_MAX = 3;                  // level index used by the random modes; max enemies alive at once in freestyle
+let gameMode = "campaign", customCfg = null, menuSel = 0, freeT = 0;
+const MENU = [
+  { id: "campaign", title: "CAMPAIGN",         sub: "Fight through the levels, one map at a time", col: "#ffd36a" },
+  { id: "ctf",      title: "CAPTURE THE FLAG", sub: "A brand-new random battlefield every game",    col: "#ff7a68" },
+  { id: "free",     title: "FREESTYLE",        sub: "Ultimate armor. Foes keep coming, three at a time", col: "#8fd8f6" },
+];
+function scaleCfg(c, keepN) {
+  return D === DIFFS.hard ? c : { ...c,
+    n: keepN ? c.n : Math.max(1, c.n + D.dn), hp: c.hp * D.hp, cd: c.cd * D.cd, err: c.err * D.err,
+    reflex: Math.min(1, c.reflex * D.reflex), temp: c.temp * D.temp };
+}
+function levelCfg(i) {
+  if (i === CUSTOM && customCfg) return scaleCfg(customCfg, true);
+  const key = diffName + i;
+  if (cfgCache[key]) return cfgCache[key];
+  return cfgCache[key] = scaleCfg(baseCfg(i));
+}
+function randomMap(n) { return endlessMap(LEVELS.length + 1 + (Math.random() * 90000 | 0), n); }
+function startGame(m) {
+  gameMode = m;
+  if (m === "campaign") { startLevel(nextOpen()); return; }
+  const mp = randomMap(6), kindsAll = ["grunt", "gunner", "heavy"];
+  if (m === "ctf") {
+    const n = 4 + (Math.random() * 3 | 0), [ww, wh] = mp.world;
+    const top = Math.random() < 0.5, cxm = Math.round(ww / 2);               // your base at the middle of the top (or bottom) edge, their flag across the map at the other
+    const baseAt = [cxm, top ? 110 : wh - 110], flagAt = [cxm, top ? wh - 110 : 110];
+    const near = (w, q) => w[0] < q[0] + 130 + w[2] && w[0] + w[2] > q[0] - 130 && w[1] < q[1] + 130 + w[3] && w[1] + w[3] > q[1] - 130;
+    mp.walls = mp.walls.filter(w => !near(w, baseAt) && !near(w, flagAt));
+    customCfg = { name: "Random Flag", n, kinds: Array.from({ length: n }, () => kindsAll[Math.random() * 3 | 0]), hp: 3, temp: 0.6, reflex: 0.35, lead: 0.95, turn: 6.5, err: 0.055, cd: 1.05,
+                  idle: true, ...mp, player: baseAt, ctf: { base: baseAt, flag: flagAt },
+                  spawn: [[flagAt[0] - 90, flagAt[1] + (top ? -90 : 90)], [flagAt[0] + 90, flagAt[1] + (top ? -90 : 90)], ...mp.spawn.filter(s => Math.hypot(s[0] - flagAt[0], s[1] - flagAt[1]) > 200 && Math.hypot(s[0] - baseAt[0], s[1] - baseAt[1]) > 450)].slice(0, n) };
+    customCfg.n = Math.min(n, customCfg.spawn.length);
+  } else customCfg = { name: "Freestyle", n: 0, kinds: [], hp: 3, temp: 0.6, reflex: 0.35, lead: 0.95, turn: 6.5, err: 0.055, cd: 1.05, ...mp, spawn: [] };
+  startLevel(CUSTOM);
+}
+function spawnFree() {                               // one random foe somewhere out of the player's face
+  const cfg = levelCfg(CUSTOM), kind = ["grunt", "gunner", "heavy"][Math.random() * 3 | 0], K = KINDS[kind];
+  for (let tries = 0; tries < 80; tries++) {
+    const x = rnd(80, WW - 80), y = rnd(80, WH - 80);
+    const t = mkTank(x, y, false, Math.max(1, Math.round((cfg.hp + 1) * K.hp)), cfg.cd * K.cd);
+    t.kind = kind; t.spd = K.spd; t.sz = K.sz; t.errMul = K.err; t.r *= K.sz;
+    if (hitsWall(x, y, t.r + 8) || dist(t, player) < 520 || tanks.some(o => o.hp > 0 && dist(o, t) < 70)) continue;
+    t.alert = true; t.home = [x, y]; t.homeAng = Math.PI; t.body = t.turret = Math.atan2(player.y - y, player.x - x);
+    tanks.push(t); sparks(x, y, 14, "#9fe3ff", 180); return;
+  }
+}
+function updateFree(dt) {
+  tanks = tanks.filter(t => t.isPlayer || t.hp > 0);
+  if (tanks.length - 1 >= FREE_MAX) { freeT = rnd(1.2, 3); return; }
+  freeT -= dt;
+  if (freeT <= 0) { spawnFree(); freeT = rnd(1.2, 3.5); }
+}
+function baseCfg(i) {
+  if (i < LEVELS.length) return LEVELS[i];
+  const k = i - LEVELS.length + 1;
+  if (k % 3 === 0) {                                          // every third endless level is another capture the flag, tougher as you go
+    const ctf = LEVELS.find(l => l.ctf);
+    return { ...ctf, name: "Endless " + k + " · Flag", kinds: ["heavy", "gunner", "gunner", "heavy", "grunt"], hp: 3 + ((i - 4) / 4 | 0), temp: 0.5, reflex: 0.4, lead: 1.0, turn: 7.5, err: 0.045, cd: 0.95 };
+  }
+  const n = Math.min(6, 5 + (i - 4) / 2 | 0);
+  return { name: "Endless " + k, n, hp: 4 + ((i - 4) / 3 | 0), temp: 0.5, reflex: 0.4, lead: 1.0, turn: 7.5, err: 0.04, cd: 0.9, idle: true, ...endlessMap(i, n) };
+}
+// Endless levels are scrolling maps built from a seed (the level number), so a level always looks the same:
+// 1-2 rivers with a bridge gap each, scattered wall bars, and enemies standing guard across the far side.
+function endlessMap(i, n) {
+  let seed = (i + 1) * 2654435761 >>> 0;
+  const r = (a, b) => { seed = (seed + 0x6D2B79F5) >>> 0; let t = seed; t = Math.imul(t ^ t >>> 15, t | 1); t ^= t + Math.imul(t ^ t >>> 7, t | 61); return a + ((t ^ t >>> 14) >>> 0) / 4294967296 * (b - a); };
+  const k = i - LEVELS.length + 1, WWd = 2400 + (k % 4) * 240, WHd = k % 2 ? 1280 : 960, GAP = 170;
+  const moats = [], walls = [], spawn = [];
+  const rivers = 1 + (k % 2);
+  for (let q = 0; q < rivers; q++) {
+    const x = Math.round(WWd * (0.3 + 0.28 * q) + r(-60, 60)), gy = Math.round(r(160, WHd - 160 - GAP));
+    moats.push([x, 0, 70, gy], [x, gy + GAP, 70, WHd - gy - GAP]);
+  }
+  const hit = (x, y, w, h, m) => moats.some(o => x < o[0] + o[2] + m && x + w > o[0] - m && y < o[1] + o[3] + m && y + h > o[1] - m) ||
+                                  walls.some(o => x < o[0] + o[2] + m && x + w > o[0] - m && y < o[1] + o[3] + m && y + h > o[1] - m);
+  for (let t = 0, want = 9 + (k % 4); t < 200 && walls.length < want; t++) {
+    const vert = r(0, 1) < 0.5, len = Math.round(r(160, 280)), w = vert ? 28 : len, h = vert ? len : 28;
+    const x = Math.round(r(300, WWd - 200 - w)), y = Math.round(r(60, WHd - 60 - h));
+    if (!hit(x, y, w, h, 70)) walls.push([x, y, w, h]);
+  }
+  for (let t = 0; t < 400 && spawn.length < n; t++) {
+    const x = Math.round(r(850, WWd - 100)), y = Math.round(r(90, WHd - 90));
+    if (!hit(x - 30, y - 30, 60, 60, 24) && spawn.every(o => Math.hypot(o[0] - x, o[1] - y) > 170)) spawn.push([x, y]);
+  }
+  return { world: [WWd, WHd], player: [80, WHd / 2], walls, moats, spawn };
+}
+
+// ---------- state ----------
+const RESPAWN_PLAYER = 8, RESPAWN_ENEMY = 16;          // capture the flag: seconds until a destroyed tank returns (you get back faster)
+const RESPAWN_GRACE = 2;                                // seconds of invulnerability after you respawn
+let respawns = [];
+let flag = null, toast = null;                        // capture-the-flag state, and the big on-screen message
+let level = 0, walls = [], moats = [], tanks = [], bullets = [], fx = [], player = null;
+let mode = "title";            // title | play | paused | dead | won
+let showBrain = true, inflight = false, lastThink = 0, jevOK = false, jevMs = 0, jevCalls = 0;
+let tick = 0;
+const coarse = matchMedia("(pointer: coarse)").matches;   // phone / tablet
+let stillFor = 0;                                           // seconds the player has been standing still
+let touchMode = coarse;                                     // flips on at first touch too
+const touch = { move: null, aim: null, fire: null };        // thumb pads + missile button
+// gamepad (Xbox / PlayStation / most Bluetooth pads via the standard mapping): left stick move, right stick aim,
+// RT / A / Cross = cannon, LT / LB / X / Square = hold to lock a missile, RB = launch it (once locked), Start = pause, Select / Y = level map
+const pad = { move: null, aim: null, fire: false, missile: false, gp: null };
+let lastInput = "kbm", padConnected = false, padPrev = [], padNote = 0;
+let PAD_DZ = 0.22;
+function padStick(ax, ay) { const m = Math.hypot(ax, ay); if (m < PAD_DZ) return null; const mag = Math.min(1, (m - PAD_DZ) / (1 - PAD_DZ)); return { x: ax / m, y: ay / m, vx: ax / m, vy: ay / m, mag }; }
+function readPad() {
+  const list = typeof navigator !== "undefined" && navigator.getGamepads ? navigator.getGamepads() : [];
+  let gp = null; for (const q of list) if (q && q.connected) { gp = q; break; }
+  pad.move = pad.aim = null; pad.fire = pad.missile = pad.launch = false; pad.gp = gp; pad.edges = {};
+  if (!gp) { padConnected = false; padPrev = []; return; }
+  if (!padConnected) { padConnected = true; padNote = 4; showPadHelp(gp); }
+  const b = i => !!(gp.buttons[i] && (gp.buttons[i].pressed || gp.buttons[i].value > 0.5));
+  const now = []; for (let i = 0; i < 17; i++) now[i] = b(i);
+  for (let i = 0; i < 17; i++) pad.edges[i] = now[i] && !padPrev[i];
+  padPrev = now;
+  pad.move = padStick(gp.axes[0] || 0, gp.axes[1] || 0);
+  const dx = (now[15] ? 1 : 0) - (now[14] ? 1 : 0), dy = (now[13] ? 1 : 0) - (now[12] ? 1 : 0);
+  if (!pad.move && (dx || dy)) pad.move = padStick(dx, dy) && { ...padStick(dx, dy), mag: 1 };
+  pad.aim = padStick(gp.axes[2] || 0, gp.axes[3] || 0);
+  pad.fire = now[7] || now[0];
+  pad.launch = now[5];
+  pad.missile = now[6] || now[4] || now[2];
+  if (pad.move || pad.aim || pad.fire || pad.missile || now.some(Boolean)) lastInput = "pad";
+}
+// First controller connection: pause and show the controls once (per browser). Any button / click / key closes it.
+const padHelpEl = document.getElementById("padHelp");
+let padHelpAt = 0;
+function showPadHelp(gp) {
+  try { if (localStorage.getItem("tb.padHelp")) return; localStorage.setItem("tb.padHelp", "1"); } catch (e) {}
+  document.getElementById("padName").textContent = (gp.id || "").replace(/\s*\(.*$/, "");
+  padHelpEl.hidden = false; padHelpAt = performance.now();
+  if (mode === "play") { mode = "paused"; releaseAll(); }
+}
+function hidePadHelp() { padHelpEl.hidden = true; }
+padHelpEl.addEventListener("pointerdown", hidePadHelp);
+addEventListener("keydown", () => { if (!padHelpEl.hidden && performance.now() - padHelpAt > 300) hidePadHelp(); }, true);
+function padMenus() {                                      // button presses on the menu screens (and Start to pause)
+  const e = pad.edges || {};
+  if (!padHelpEl.hidden) { if (performance.now() - padHelpAt > 400 && Object.values(e).some(Boolean)) hidePadHelp(); return; }
+  if (mode === "play") { if (e[9]) { mode = "paused"; } return; }
+  if (mode === "map") {
+    const m = e[14] ? -1 : e[15] ? 1 : 0;
+    if (m) mapSel = clamp(mapSel + m, 0, mapMax());
+    else if (e[12] || e[13]) mapVert();
+    if (e[0] || e[9]) startFromMap(mapSel);
+    if (e[1] || e[8]) mode = mapFrom;
+    return;
+  }
+  if (mode === "settings") {
+    if (e[12]) setSel = (setSel + SET_ROWS.length - 1) % SET_ROWS.length; if (e[13]) setSel = (setSel + 1) % SET_ROWS.length;
+    if (e[14]) setStep(setSel, -1); if (e[15]) setStep(setSel, 1);
+    if (e[3]) resetSettings();
+    if (e[1] || e[9] || e[0]) mode = setFrom;
+    return;
+  }
+  if ((mode === "title" || mode === "paused" || mode === "dead" || mode === "won") && e[3]) { openSettings(); return; }
+  if (mode === "title" && (e[14] || e[15])) { stepDiff(e[14] ? -1 : 1); return; }
+  if (mode === "title" && (e[12] || e[13])) { menuSel = (menuSel + (e[12] ? MENU.length - 1 : 1)) % MENU.length; return; }
+  if (mode !== "title" && e[1]) { if (mode === "paused" || mode === "dead" || mode === "won") toMenu(); return; }
+  if ((e[8] || e[3]) && (mode === "title" || gameMode === "campaign")) { openMap(); return; }
+  if (e[0] || e[9]) advance();
+}
+function rumble(strong, ms) { try { const a = pad.gp && pad.gp.vibrationActuator; if (a && a.playEffect) a.playEffect("dual-rumble", { duration: ms, strongMagnitude: strong, weakMagnitude: Math.min(1, strong + 0.2) }); } catch (e) {} }
+let manualUntil = 0;                                        // manual aim is held until this game time
+const AIM_ASSIST = false;                                   // manual-aim assist (soft pull onto enemies); off: your thumb is the aim
+const ASSIST_SPEED = [25, 70];                              // target speed (px/s): assist full below, off above (you lead by hand)
+const ASSIST = 0.30, ASSIST_FULL = 0.15, AIM_HOLD = 1.5, AIM_SMOOTH = 22;      // aim assist cone (rad), hold time (s), turret ease rate
+let PAD_AIM_EASE = 8, PAD_AIM_MAX = 4.5;                 // controller turret: ease rate (1/s) and max turn speed (rad/s); lower = slower, finer aim
+const AIM_FIRE = 0.55;                     // pad dead zone; deflection that also fires
+let fireHold = false;
+let lockHeld = false, missileSpent = false;                   // lock key held; already launched this press
+let lockTarget = null, lockT = 0;                            // missile lock-on: target and seconds held
+let touchLock = null;                                        // phone: enemy the next cannon shot will lock onto (nearest the aim line)
+let autoTarget = null, autoErr = Infinity;                  // enemy the auto-aim is locked on, and how far the turret still is from it
+let prevMode = "title", modeSince = 0;
+// level map + progress. Saving to localStorage is a toggle (T on the map screen) and is OFF by default.
+const MAP_N = 10, SAVE_KEY = "tankbattle.progress.v1", SAVE_FLAG = "tankbattle.save";
+let saveOn = false, mapSel = 0, mapFrom = "title"; const cleared = new Set();
+function store(op, k, v) {
+  try { if (typeof localStorage === "undefined") return null; return op === "get" ? localStorage.getItem(k) : op === "set" ? localStorage.setItem(k, v) : localStorage.removeItem(k); } catch (e) { return null; }
+}
+function saveProgress() { if (saveOn) store("set", SAVE_KEY, JSON.stringify([...cleared])); }
+function loadProgress() { try { JSON.parse(store("get", SAVE_KEY) || "[]").forEach(i => cleared.add(i)); } catch (e) {} }
+function toggleSave() { saveOn = !saveOn; if (saveOn) { store("set", SAVE_FLAG, "1"); loadProgress(); saveProgress(); } else store("remove", SAVE_FLAG); }
+const mapMax = () => Math.max(MAP_N - 1, level, (cleared.size ? Math.max(...cleared) : -1) + 1);   // highest level the map shows (levels go on forever)
+const mapVert = () => { const base = mapPage() * MAP_N, j = mapSel - base; mapSel = Math.min(mapMax(), base + MAP_N - 1 - j); };   // up/down: the node above/below on the two-row map
+const mapPage = () => mapSel / MAP_N | 0;
+const unlocked = i => i === 0 || cleared.has(i) || cleared.has(i - 1);
+const nextOpen = () => { let i = 0; while (cleared.has(i)) i++; return i; };
+const keys = {}; let mouse = { x: W / 2, y: H / 2, down: false };
+let playerMoves = [];          // recent player movement words
+let lastMoveSample = 0;
+let shake = 0, hurtFlash = 0;  // screen shake (px) and red-edge flash (0..1)
+let kills = 0;
+
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const angDiff = (a, b) => { let d = (b - a) % (2 * Math.PI); if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; };
+const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+const gauss = () => (Math.random() + Math.random() + Math.random() - 1.5) / 0.5;
+const clock = () => performance.now() / 1000;
+
+const COMPASS = ["east","south-east","south","south-west","west","north-west","north","north-east"];
+const compass = a => COMPASS[((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8];
+
+let tankSeed = 1;
+function mkTank(x, y, isPlayer, hp, cd) {
+  return { x, y, r: 16 * TANK_SCALE, body: 0, turret: 0, hp, maxhp: hp, cd: 0, cdMax: cd, isPlayer,
+           order: null, orderT: 0, vx: 0, vy: 0, brain: null, flash: 0,
+           hurtT: 0, recoil: 0, muzzle: 0, tread: 0, trail: 0, smokeT: 0, seed: tankSeed++,
+           ammo: isPlayer ? MISSILE_MAX : 0, missileGap: 0, missileT: 0 };
+}
+
+function alertTank(t) {
+  if (t.alert) return;
+  t.alert = true;
+  for (const o of tanks) if (!o.isPlayer && o.hp > 0 && !o.alert && dist(o, t) < ALERT_SHARE) alertTank(o);
+}
+function updateCam(dt, snap) {
+  const p = player, tx = clamp(p.x + Math.cos(p.turret) * 70 - W / 2, 0, Math.max(0, WW - W)), ty = clamp(p.y + Math.sin(p.turret) * 70 - H / 2, 0, Math.max(0, WH - H));
+  if (snap) { cam.x = tx; cam.y = ty; return; }
+  const k = 1 - Math.exp(-dt * 5); cam.x += (tx - cam.x) * k; cam.y += (ty - cam.y) * k;
+}
+function startLevel(i) {
+  level = i;
+  const cfg = levelCfg(i);
+  const rects = a => (a || []).map(([x, y, w, h]) => ({ x, y, w, h }));
+  [WW, WH] = cfg.world || [W, H];
+  walls = rects(cfg.walls || wallSet(i)); moats = rects(cfg.moats);
+  bullets = []; fx = []; shake = 0; hurtFlash = 0; kills = 0;
+  decal = makeCanvas(WW, WH); dg = decal.getContext("2d");
+  buildWorld(); buildNav();
+  respawns = [];
+  flag = cfg.ctf ? { base: cfg.ctf.base, home: cfg.ctf.flag, x: cfg.ctf.flag[0], y: cfg.ctf.flag[1], carried: false } : null;
+  toast = flag ? { title: "CAPTURE THE FLAG", sub: "Take the flag from the enemy base (across the map) and bring it back to your base", t: 7, max: 7 } : null;
+  const ps = cfg.player || [80, H / 2];
+  player = mkTank(ps[0], ps[1], true, gameMode === "free" ? 999 : D.php, 0.35);
+  freeT = 2;
+  tanks = [player];
+  const kinds = levelKinds(i);
+  for (let k = 0; k < cfg.n; k++) {
+    const K = KINDS[kinds[k] || "grunt"];
+    for (let tries = 0; tries < 50; tries++) {
+      const sp = cfg.spawn && cfg.spawn[k];
+      const x = sp ? sp[0] : rnd(WW - 330, WW - 50), y = sp ? sp[1] : rnd(50, WH - 50);
+      const t = mkTank(x, y, false, Math.max(1, Math.round(cfg.hp * K.hp)), cfg.cd * K.cd);
+      t.kind = kinds[k] || "grunt"; t.spd = K.spd; t.sz = K.sz; t.errMul = K.err; t.r *= K.sz;
+      t.alert = !cfg.idle; t.home = [x, y]; t.homeAng = sp && sp[2] !== undefined ? sp[2] : Math.PI;                                   // adventure maps: enemies stand guard until they spot you
+      if (!hitsWall(t.x, t.y, t.r + 8) && tanks.every(o => dist(o, t) > 60 * TANK_SCALE)) { t.body = t.turret = sp && sp[2] !== undefined ? sp[2] : Math.PI; tanks.push(t); break; }
+    }
+  }
+  updateCam(0, true);
+  missileSpent = false; lockT = 0; lockTarget = null;
+  playerMoves = []; stillFor = 0;
+  mode = "play";
+}
+
+// ---------- path finding (enemies that "charge" walk around walls and water) ----------
+const PF = 20, PF_R = 27;                                  // nav grid cell size; keep-out radius (a bit over the biggest tank)
+let pfGrid = null, pfW = 0, pfH = 0;
+function buildNav() {
+  pfW = Math.ceil(WW / PF); pfH = Math.ceil(WH / PF); pfGrid = new Uint8Array(pfW * pfH);
+  for (let y = 0; y < pfH; y++) for (let x = 0; x < pfW; x++) pfGrid[y * pfW + x] = hitsWall(x * PF + PF / 2, y * PF + PF / 2, PF_R) ? 1 : 0;
+}
+function clearLine(ax, ay, bx, by, r) {
+  const n = Math.ceil(Math.hypot(bx - ax, by - ay) / 10);
+  for (let i = 1; i <= n; i++) if (hitsWall(ax + (bx - ax) * i / n, ay + (by - ay) * i / n, r)) return false;
+  return true;
+}
+function nearestFree(cx, cy) {                             // a tank hugging a wall can sit in a blocked cell: use the closest open one
+  cx = clamp(cx, 0, pfW - 1); cy = clamp(cy, 0, pfH - 1);
+  if (!pfGrid[cy * pfW + cx]) return [cx, cy];
+  for (let R = 1; R < 6; R++) for (let dy = -R; dy <= R; dy++) for (let dx = -R; dx <= R; dx++) {
+    const x = cx + dx, y = cy + dy; if (Math.max(Math.abs(dx), Math.abs(dy)) !== R || x < 0 || y < 0 || x >= pfW || y >= pfH) continue;
+    if (!pfGrid[y * pfW + x]) return [x, y];
+  }
+  return null;
+}
+// A* over the grid, then string-pulled into a few waypoints (world coordinates). Returns null if there is no route.
+function findPath(ax, ay, bx, by, r) {
+  const s0 = nearestFree(Math.floor(ax / PF), Math.floor(ay / PF)), g0 = nearestFree(Math.floor(bx / PF), Math.floor(by / PF));
+  if (!s0 || !g0) return null;
+  const N = pfW * pfH, gs = new Float32Array(N).fill(1e9), from = new Int32Array(N).fill(-1), closed = new Uint8Array(N);
+  const si = s0[1] * pfW + s0[0], gi = g0[1] * pfW + g0[0], heap = [[0, si]];
+  const hf = i => { const x = i % pfW, y = (i / pfW) | 0, dx = Math.abs(x - g0[0]), dy = Math.abs(y - g0[1]); return (dx + dy + (Math.SQRT2 - 2) * Math.min(dx, dy)) * PF; };
+  const push = e => { heap.push(e); let i = heap.length - 1; while (i > 0) { const p = (i - 1) >> 1; if (heap[p][0] <= heap[i][0]) break; [heap[p], heap[i]] = [heap[i], heap[p]]; i = p; } };
+  const pop = () => { const top = heap[0], last = heap.pop(); if (heap.length) { heap[0] = last; let i = 0; for (;;) { let l = 2 * i + 1, m = i; if (l < heap.length && heap[l][0] < heap[m][0]) m = l; if (l + 1 < heap.length && heap[l + 1][0] < heap[m][0]) m = l + 1; if (m === i) break; [heap[m], heap[i]] = [heap[i], heap[m]]; i = m; } } return top; };
+  gs[si] = 0;
+  while (heap.length) {
+    const [, cur] = pop(); if (closed[cur]) continue; closed[cur] = 1;
+    if (cur === gi) break;
+    const cx = cur % pfW, cy = (cur / pfW) | 0;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      if (!dx && !dy) continue;
+      const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= pfW || ny >= pfH) continue;
+      const ni = ny * pfW + nx; if (closed[ni] || pfGrid[ni]) continue;
+      if (dx && dy && (pfGrid[cy * pfW + nx] || pfGrid[ny * pfW + cx])) continue;       // no cutting corners
+      const c = gs[cur] + (dx && dy ? Math.SQRT2 : 1) * PF;
+      if (c < gs[ni]) { gs[ni] = c; from[ni] = cur; push([c + hf(ni), ni]); }
+    }
+  }
+  if (!closed[gi]) return null;
+  const pts = []; for (let i = gi; i !== -1; i = from[i]) pts.push({ x: (i % pfW) * PF + PF / 2, y: ((i / pfW) | 0) * PF + PF / 2 });
+  pts.reverse();
+  const out = []; let cx = ax, cy = ay, i = 0;                                     // string pulling: jump to the farthest waypoint we can drive straight to
+  while (i < pts.length) {
+    let j = pts.length - 1; while (j > i && !clearLine(cx, cy, pts[j].x, pts[j].y, r)) j--;
+    out.push(pts[j]); cx = pts[j].x; cy = pts[j].y; i = j + 1;
+  }
+  return out;
+}
+
+// ---------- geometry ----------
+function circleRect(x, y, r, w) {
+  const cx = clamp(x, w.x, w.x + w.w), cy = clamp(y, w.y, w.y + w.h);
+  return (x - cx) ** 2 + (y - cy) ** 2 < r * r;
+}
+function hitsWall(x, y, r) {
+  if (x < r || y < r || x > WW - r || y > WH - r) return true;
+  return walls.some(w => circleRect(x, y, r, w)) || moats.some(w => circleRect(x, y, r, w));   // tanks can't cross water either
+}
+function los(a, b) {
+  const n = Math.ceil(dist(a, b) / 8);
+  for (let i = 1; i < n; i++) {
+    const x = a.x + (b.x - a.x) * i / n, y = a.y + (b.y - a.y) * i / n;
+    if (walls.some(w => x >= w.x && x <= w.x + w.w && y >= w.y && y <= w.y + w.h)) return false;
+  }
+  return true;
+}
+function moveTank(t, dx, dy) {
+  if (!hitsWall(t.x + dx, t.y, t.r)) t.x += dx;
+  if (!hitsWall(t.x, t.y + dy, t.r)) t.y += dy;
+  for (const o of tanks) if (o !== t && o.hp > 0) {
+    const d = dist(t, o), m = t.r + o.r;
+    if (d < m && d > 0) { t.x += (t.x - o.x) / d * (m - d); t.y += (t.y - o.y) / d * (m - d); }
+  }
+}
+// move + animate treads + leave track marks in the dirt
+function drive(t, dx, dy) {
+  const px = t.x, py = t.y;
+  moveTank(t, dx, dy);
+  const moved = Math.hypot(t.x - px, t.y - py);
+  t.tread += moved; t.trail += moved;
+  if (t.trail > 9) { t.trail = 0; stampTread(t); }
+}
+
+// shell: the normal cannon round (player's and the enemies')
+function fire(t, ang, speed, spread = 0, target = null, turn = SHELL_TURN, cone = SHELL_CONE) {
+  if (t.cd > 0) return false;
+  const a = ang + spread, S = TANK_SCALE;
+  bullets.push({ type: "shell", dmg: 1, x: t.x + Math.cos(a) * 24 * S, y: t.y + Math.sin(a) * 24 * S, vx: Math.cos(a) * speed, vy: Math.sin(a) * speed, owner: t, life: 2.5, target, turn, cone });
+  t.cd = t.cdMax; t.recoil = 1; t.muzzle = 0.07;
+  sparks(t.x + Math.cos(a) * 30 * S, t.y + Math.sin(a) * 30 * S, 5, "#ffd98a", 140);
+  smoke(t.x + Math.cos(a) * 30 * S, t.y + Math.sin(a) * 30 * S, 5, 0.5, Math.cos(a) * 25, Math.sin(a) * 25, "#b9b4a0", 0.35);
+  if (t.isPlayer) shake = Math.max(shake, 1.2);
+  return true;
+}
+// heat-seeking missile: fast, steers onto a target in front of it (see seek())
+function launchMissile(t, target = null) {
+  if (!t.ammo || t.missileGap > 0) return false;                       // 3 missiles per level, no reload, short gap between launches
+  const a = t.turret, S = TANK_SCALE;
+  const x = t.x + Math.cos(a) * 26 * S, y = t.y + Math.sin(a) * 26 * S;
+  bullets.push({ type: "missile", dmg: MISSILE_DMG, x, y, ang: a, speed: 260, vx: Math.cos(a) * 260, vy: Math.sin(a) * 260, owner: t, life: MISSILE_LIFE, target, trailT: 0 });
+  if (t.isPlayer && gameMode !== "free") t.ammo--;          // freestyle: unlimited missiles
+  t.missileGap = MISSILE_GAP; t.recoil = 1; t.muzzle = 0.1;
+  sparks(x, y, 8, "#ffe0a0", 190);
+  smoke(x - Math.cos(a) * 6, y - Math.sin(a) * 6, 9, 0.8, -Math.cos(a) * 30, -Math.sin(a) * 30, "#d8d4c4", 0.5);
+  if (t.isPlayer) shake = Math.max(shake, 2.2);
+  return true;
+}
+// seeker head: the hottest (closest, most in front) enemy inside the cone ahead of the missile
+function seek(b) {
+  let best = null, bs = Infinity;
+  for (const t of tanks) {
+    if (t.hp <= 0 || t.isPlayer === b.owner.isPlayer) continue;
+    const d = Math.hypot(t.x - b.x, t.y - b.y), da = Math.abs(angDiff(b.ang, Math.atan2(t.y - b.y, t.x - b.x)));
+    if (d > SEEK_RANGE || da > SEEK_CONE || !los(b, t)) continue;
+    const score = d * (1 + da * 2);
+    if (score < bs) { bs = score; best = t; }
+  }
+  return best;
+}
+
+// ---------- threat / state for JEV ----------
+function threatFor(t) {
+  let best = null;
+  for (const b of bullets) {
+    if (b.owner === t) continue;
+    const dx = t.x - b.x, dy = t.y - b.y, sp2 = b.vx * b.vx + b.vy * b.vy;
+    const along = (dx * b.vx + dy * b.vy) / sp2;     // seconds until closest approach
+    if (along <= 0 || along > 1.8) continue;
+    const miss = Math.abs(dx * b.vy - dy * b.vx) / Math.sqrt(sp2);
+    if (miss > t.r + 22) continue;
+    if (!best || along < best.eta) best = { eta: along, b, side: (dx * b.vy - dy * b.vx) };
+  }
+  return best;
+}
+
+function describe(t, name) {
+  const p = player, d = dist(t, p), a = Math.atan2(p.y - t.y, p.x - t.x);
+  const th = threatFor(t);
+  const walls_ = [];
+  for (const [n, ang] of [["E",0],["S",Math.PI/2],["W",Math.PI],["N",-Math.PI/2]])
+    if (hitsWall(t.x + Math.cos(ang) * 40, t.y + Math.sin(ang) * 40, t.r)) walls_.push(n);
+  const dd = d < 140 ? "very close" : d < 300 ? "close" : d < ENEMY_FIRE_RANGE ? "medium range" : "far";
+  return `${name}: hp ${t.hp}/${t.maxhp}, ${t.cd <= 0 ? "loaded" : "reloading"}, player ${dd} ${compassShort(a)}, ` +
+    `${los(t, p) ? "clear shot" : "no line of sight"}, ` +
+    `missile ${th ? `from ${compassShort(Math.atan2(th.b.y - t.y, th.b.x - t.x))} hits in ${th.eta.toFixed(1)}s` : "none"}, ` +
+    `walls ${walls_.length ? walls_.join("") : "none"}`;
+}
+const COMPASS_S = ["E","SE","S","SW","W","NW","N","NE"];
+const compassShort = a => COMPASS_S[((Math.round(a / (Math.PI / 4)) % 8) + 8) % 8];
+function battlefield(names) {
+  const p = player, sp = Math.hypot(p.vx, p.vy);
+  return (flag && flag.carried ? "ALERT: the player is carrying our flag, stop them at any cost\n" : "") + `Player: hp ${p.hp}, ${sp < 5 ? "standing still" : "moving " + compassShort(Math.atan2(p.vy, p.vx))}, recent moves ${playerMoves.slice(-3).join(", ") || "none"}\n` +
+    names.map(([t, n]) => describe(t, n)).join("\n");
+}
+
+// ---------- situational options ----------
+// Instead of hoping the model avoids bad moves, never offer them.
+function blocked(t, ang, d = 60) { return hitsWall(t.x + Math.cos(ang) * d, t.y + Math.sin(ang) * d, t.r); }
+function optionsFor(t) {
+  const p = player, d = dist(t, p), toP = Math.atan2(p.y - t.y, p.x - t.x);
+  const th = threatFor(t), seesPlayer = los(t, p);
+  const ok = {
+    // a missile is inbound and at least one sidestep is open
+    dodge:  !!th && !(blocked(t, Math.atan2(th.b.vy, th.b.vx) + Math.PI / 2) && blocked(t, Math.atan2(th.b.vy, th.b.vx) - Math.PI / 2)),
+    charge: d > 130 && !blocked(t, toP),
+    back:   d < 420 && !blocked(t, toP + Math.PI),
+    left:   d < 480 && !blocked(t, toP - Math.PI / 2),
+    right:  d < 480 && !blocked(t, toP + Math.PI / 2),
+    snipe:  seesPlayer && d < ENEMY_FIRE_RANGE,
+    wait:   t.cd > 0,
+  };
+  if (flag && flag.carried) ok.back = ok.wait = false;                 // the player has the flag: no hanging back, hunt them down
+  const opts = MOVE_OPTS.filter(o => ok[o.id]);
+  // the API needs at least two options
+  for (const id of ["wait", "charge", "snipe"]) if (opts.length < 2 && !opts.some(o => o.id === id)) opts.push(MOVE_OPTS.find(o => o.id === id));
+  return opts;
+}
+
+// ---------- JEV backend: the JEV server (default) or the model in this browser (WebGPU) ----------
+// ?jev=local runs the tuned GGUF in a worker (remembered; ?jev=server switches back). ?quant=q8 picks the bigger file.
+const URLQ = new URLSearchParams(typeof location === "undefined" ? "" : location.search);
+const JEV_MODE = (() => {
+  const q = URLQ.get("jev");
+  try { if (q) localStorage.setItem("tb.jev", q); return q || localStorage.getItem("tb.jev") || "local"; } catch (e) { return q || "local"; }
+})();
+const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);   // iOS: CPU by default, WebGPU there blows the tab's memory budget
+const localJev = { state: "idle", pct: 0, worker: null, pending: new Map(), seq: 0, calls: 0 };
+const JEV_RECYCLE = 120;   // wasm memory never shrinks; a fresh worker every N decisions keeps iOS from jetsamming the tab
+addEventListener("pagehide", () => { try { localStorage.removeItem("tb.stage"); } catch (e) {} });
+function recycleLocalJev() {
+  const w = localJev.worker; localJev.worker = null; localJev.state = "idle"; localJev.pct = 100;
+  localJev.pending.forEach(p => p.rej(new Error("recycled"))); localJev.pending.clear();
+  if (w) w.terminate();
+  setTimeout(startLocalJev, 500);   // let the old heap be released first
+}
+function startLocalJev() {
+  if (localJev.state !== "idle") return;
+  const wantGpu = URLQ.has("gpu") ? URLQ.get("gpu") !== "0" : !IOS;   // WebGPU only matters when GPU mode is requested; iOS defaults to CPU
+  if ((wantGpu && !navigator.gpu) || !window.isSecureContext) { localJev.state = "error"; localJev.why = !window.isSecureContext ? "needs https" : "no WebGPU"; return; }
+  localJev.state = "loading";
+  // a marker left over from a previous visit = that tab died in that stage
+  if (!localJev.started) try { const prev = localStorage.getItem("tb.stage"); if (prev) localJev.prev = prev; } catch (e) {}
+  localJev.started = true;
+  const w = localJev.worker = new Worker("jev-worker.js", { type: "module" });
+  w.onmessage = ({ data: m }) => {
+    if (m.type === "booted") w.postMessage({ type: "load", quant: URLQ.get("quant") || (/iP(hone|ad|od)/.test(navigator.userAgent) ? "small" : "q4"), gpu: wantGpu });   // not before: the worker drops messages sent while its module is still loading
+    else if (m.type === "log") console.log("[jev]", m.m);
+    else if (m.type === "stage") { localJev.stage = m.name; try { localStorage.setItem("tb.stage", m.name); } catch (e) {} }
+    else if (m.type === "progress") localJev.pct = m.total ? Math.round(m.loaded / m.total * 100) : 0;
+    else if (m.type === "ready") { localJev.state = "ready"; localJev.calls = 0; try { localStorage.setItem("tb.stage", "play"); } catch (e) {} }   // cleared on pagehide: still set next visit = the tab died while playing
+    else if (m.type === "result" || m.type === "error") {
+      if (m.type === "error" && m.id == null) { localJev.state = "error"; localJev.why = String(m.message || "load failed").slice(0, 70); return; }
+      const p = localJev.pending.get(m.id); localJev.pending.delete(m.id);
+      if (p) m.type === "result" ? p.res(m.results) : p.rej(new Error(m.message));
+    }
+  };
+  w.onerror = () => { localJev.state = "error"; localJev.why = "worker failed"; };
+}
+async function jevDecide(body) {
+  if (JEV_MODE !== "local") {
+    const r = await fetch("/v1/decide/shared", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
+    if (!r.ok) throw new Error(r.status);
+    return (await r.json()).results;
+  }
+  startLocalJev();
+  if (localJev.state !== "ready") throw new Error("local JEV " + localJev.state);   // scripted fallback until the model is up
+  if (++localJev.calls > JEV_RECYCLE) { recycleLocalJev(); throw new Error("local JEV recycling"); }
+  try { if (localJev.calls % 10 === 0) localStorage.setItem("tb.stage", "play@" + localJev.calls); } catch (e) {}
+  const id = ++localJev.seq;
+  return new Promise((res, rej) => {
+    localJev.pending.set(id, { res, rej });
+    localJev.worker.postMessage({ type: "decide", id, state: body.state, items: body.items.map(({ question, options }) => ({ question, options })) });
+  });
+}
+
+if (URLQ.has("portrait")) document.getElementById("rotate").style.setProperty("display", "none", "important");   // debug: iPhone Mirroring can't rotate
+if (JEV_MODE === "local") startLocalJev();   // start the model download/compile right away
+
+// ---------- JEV client ----------
+async function think() {
+  const alive = tanks.filter(t => !t.isPlayer && t.hp > 0 && t.alert);
+  if (!alive.length) return;
+  // tanks with a missile heading at them are decided first; the rest take turns
+  const threatened = alive.filter(t => threatFor(t)), rest = alive.filter(t => !threatFor(t));
+  const off = rest.length ? rr % rest.length : 0;
+  const foes = [...threatened, ...rest.slice(off), ...rest.slice(0, off)].slice(0, MAX_PER_CALL);
+  rr = rest.length ? (rr + foes.filter(t => !threatened.includes(t)).length) % rest.length : 0;
+  const offered = foes.map(optionsFor);
+  inflight = true;
+  const names = foes.map((t, i) => [t, "T" + (i + 1)]);
+  const body = {
+    state: battlefield(names),
+    // each tank only gets options that make sense for its situation (see optionsFor)
+    items: names.map(([t, n], i) => ({ id: n, question: `Best action for tank ${n}?`, options: offered[i] })),
+  };
+  const t0 = performance.now();
+  try {
+    const out = await jevDecide(body);
+    jevMs = performance.now() - t0; jevCalls++; jevOK = true;
+    const T = levelCfg(level).temp;
+    foes.forEach((t, i) => {
+      if (t.hp <= 0) return;
+      const dodgeOn = offered[i].some(o => o.id === "dodge");
+      const m = pick(out[i], dodgeOn ? Math.min(T, DODGE_TEMP) : T);   // a threatened tank follows JEV's pick more closely
+      t.order = { move: m.id }; t.orderT = ORDER_TTL; t.brain = m;
+    });
+  } catch (e) {
+    jevOK = false;
+    foes.forEach(t => { t.order = fallback(t); t.orderT = ORDER_TTL; t.brain = null; });
+  }
+  inflight = false;
+}
+
+function pick(res, T) {
+  const w = res.probabilities.map(p => Math.pow(Math.max(p, 1e-6), 1 / T));
+  const s = w.reduce((a, b) => a + b, 0);
+  let r = Math.random() * s, i = 0;
+  for (; i < w.length - 1; i++) { r -= w[i]; if (r <= 0) break; }
+  return { id: res.option_ids[i], p: res.probabilities[i] };
+}
+
+function fallback(t) {          // used only if JEV is unreachable
+  const d = dist(t, player);
+  return { move: threatFor(t) ? "dodge" : d > 300 ? "charge" : Math.random() < .5 ? "left" : "right" };
+}
+
+// ---------- auto-aim (touch) ----------
+// Lock the nearest enemy that has a clear line of sight (else the nearest), turn toward where it will be.
+// Soft aim assist for manual aiming: pull the aim toward an enemy (with lead) that has a clear shot and is
+// near the aim line (and not moving fast, see assistStill). Full pull within ASSIST_FULL, then a smooth fade to nothing at the edge of the cone
+// (ASSIST), so the magnet weakens gradually instead of switching off.
+// It keeps its current target until another enemy is clearly closer to the aim (hysteresis), and eases off
+// when several enemies are in the cone, so two tanks near each other can't make the aim flip between them.
+let assistLock = null;
+// Moving targets: the game's own lead guess would fight a deliberate manual lead, so the assist fades out with speed.
+function assistStill(sp) {
+  const u = Math.min(1, Math.max(0, (sp - ASSIST_SPEED[0]) / (ASSIST_SPEED[1] - ASSIST_SPEED[0])));
+  return 1 - u * u * (3 - 2 * u);
+}
+function assistPull(d) {
+  if (d <= ASSIST_FULL) return 1;
+  const u = (d - ASSIST_FULL) / (ASSIST - ASSIST_FULL);
+  return 1 - u * u * (3 - 2 * u);                            // smoothstep down to 0
+}
+const ASSIST_SWITCH = 0.07;                                  // rad: a rival must be this much closer to take over
+function assistAim(p, a) {
+  if (!AIM_ASSIST) { assistLock = autoTarget = null; return a; }
+  const cands = [];
+  for (const t of tanks) {
+    if (t.isPlayer || t.hp <= 0 || !los(p, t)) continue;
+    const k = assistStill(Math.hypot(t.vx, t.vy));
+    if (k < 0.02) continue;                                  // moving too fast: aim is entirely yours
+    const T = dist(p, t) / P_BULLET;
+    const ta = Math.atan2(t.y + t.vy * T - p.y, t.x + t.vx * T - p.x);
+    const diff = Math.abs(angDiff(a, ta));
+    if (diff < ASSIST) cands.push({ t, ta, diff, k });
+  }
+  if (!cands.length) { assistLock = autoTarget = null; return a; }
+  const nearest = cands.reduce((m, c) => (c.diff < m.diff ? c : m));
+  let pick = cands.find(c => c.t === assistLock);
+  if (!pick || nearest.diff + ASSIST_SWITCH < pick.diff) pick = nearest;
+  assistLock = autoTarget = pick.t;
+  let w = assistPull(pick.diff) * pick.k;
+  if (cands.some(c => c !== pick && Math.abs(c.diff - pick.diff) < 0.08)) w *= 0.6;   // another enemy about as close: ambiguous, don't yank
+  return a + angDiff(a, pick.ta) * w;
+}
+
+function pickShellTarget(p) {
+  let best = null, bs = Infinity;
+  for (const t of tanks) {
+    if (t.isPlayer || t.hp <= 0) continue;
+    const d = dist(p, t);
+    if (d > TOUCH_LOCK_RANGE || !los(p, t)) continue;
+    const da = Math.abs(angDiff(p.turret, Math.atan2(t.y - p.y, t.x - p.x)));
+    if (da > TOUCH_LOCK_CONE) continue;
+    const score = da + d / 4000;                       // mostly the aim line; distance only breaks ties
+    if (score < bs) { bs = score; best = t; }
+  }
+  return best;
+}
+function autoAim(p, dt) {
+  let best = null, bd = Infinity, bestVis = false;
+  for (const t of tanks) {
+    if (t.isPlayer || t.hp <= 0) continue;
+    const d = dist(p, t), vis = los(p, t);
+    if ((vis && !bestVis) || (vis === bestVis && d < bd)) { best = t; bd = d; bestVis = vis; }
+  }
+  autoTarget = best;
+  if (!best) { autoErr = Infinity; return false; }
+  const T = bd / P_BULLET;
+  const a = Math.atan2(best.y + best.vy * T - p.y, best.x + best.vx * T - p.x);
+  p.turret += clamp(angDiff(p.turret, a), -9 * dt, 9 * dt);
+  autoErr = Math.abs(angDiff(p.turret, a));
+  return autoErr < 0.12;
+}
+
+// ---------- effects: particles, damage, explosions, decals ----------
+function addFx(f) { fx.push(f); if (fx.length > 520) fx.splice(0, fx.length - 520); }
+function sparks(x, y, n, col, speed = 200) {
+  for (let i = 0; i < n; i++) { const a = rnd(0, 6.283), s = rnd(speed * 0.3, speed); addFx({ kind: "spark", x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rnd(.18, .5), max: 0.5, col, drag: 3 }); }
+}
+function smoke(x, y, size, life, vx, vy, col = "#6d6a60", a = 0.5) {
+  addFx({ kind: "smoke", x, y, vx: vx + rnd(-12, 12), vy: vy + rnd(-12, 12), size, grow: 2.4, life, max: life, col, a, drag: 1.2 });
+}
+function explosion(x, y, big) {
+  const n = big ? 26 : 12, sz = big ? 1 : 0.6;
+  addFx({ kind: "ring", x, y, size: 6, grow: big ? 90 : 48, life: 0.45, max: 0.45, col: "#ffd9a0" });
+  addFx({ kind: "flash", x, y, size: (big ? 70 : 38), life: 0.14, max: 0.14, col: "#fff2c8" });
+  for (let i = 0; i < n; i++) { const a = rnd(0, 6.283), s = rnd(40, 240) * sz; addFx({ kind: "fire", x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, size: rnd(6, 15) * sz, life: rnd(.3, .75), max: 0.75, col: Math.random() < .5 ? "#ff9a2e" : "#ffd24a", drag: 2.5 }); }
+  for (let i = 0; i < n; i++) smoke(x + rnd(-8, 8), y + rnd(-8, 8), rnd(9, 18) * sz, rnd(.9, 1.7), rnd(-30, 30), rnd(-50, -10), "#4a4741", 0.55);
+  sparks(x, y, big ? 22 : 10, "#ffcf70", 300);
+  if (big) for (let i = 0; i < 12; i++) { const a = rnd(0, 6.283), s = rnd(60, 260); addFx({ kind: "debris", x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, size: rnd(2.5, 6), rot: rnd(0, 6), vr: rnd(-12, 12), life: rnd(.5, 1.1), max: 1.1, col: Math.random() < .5 ? "#2a2d28" : "#6b3a2c", drag: 1.5, grav: 120 }); }
+  stampScorch(x, y, big ? 34 : 16);
+  if (player) shake = Math.max(shake, (big ? 11 : 5) * clamp(1.2 - Math.hypot(player.x - x, player.y - y) / 700, 0.25, 1));
+}
+// damage with feedback: flash, sparks, shake; the player also gets the red screen edge
+function hurt(t, dmg, x, y) {
+  if (t.invuln > 0) return;
+  t.hp = Math.max(0, t.hp - dmg); t.flash = 0.18; t.hurtT = 0.5;
+  sparks(x, y, 10, "#ffb347", 230);
+  for (let i = 0; i < 3; i++) smoke(x, y, 7, 0.7, rnd(-30, 30), rnd(-40, -10), "#555048", 0.5);
+  if (t.isPlayer) {
+    hurtFlash = 1; shake = Math.max(shake, 9 + 3 * dmg);
+    cv.classList.remove("hurt"); void cv.offsetWidth; cv.classList.add("hurt");   // red glow on the canvas edge (restarts the animation)
+    if (typeof navigator !== "undefined" && navigator.vibrate) navigator.vibrate(dmg > 1 ? [40, 30, 60] : 40);
+    rumble(dmg > 1 ? 0.9 : 0.55, dmg > 1 ? 260 : 160);
+  } else { shake = Math.max(shake, 3); alertTank(t); }
+  if (t.hp <= 0) { explosion(t.x, t.y, true); if (!t.isPlayer) kills++; }
+}
+function updateFx(dt) {
+  for (const f of fx) {
+    f.life -= dt;
+    if (f.drag) { const k = Math.max(0, 1 - f.drag * dt); f.vx *= k; f.vy *= k; }
+    if (f.grav) f.vy += f.grav * dt;
+    if (f.vx !== undefined) { f.x += f.vx * dt; f.y += f.vy * dt; }
+    if (f.vr) f.rot += f.vr * dt;
+  }
+  fx = fx.filter(f => f.life > 0);
+  shake = Math.max(0, shake - 30 * dt);
+  hurtFlash = Math.max(0, hurtFlash - 1.5 * dt);
+  for (const t of tanks) { t.flash -= dt; t.hurtT = Math.max(0, t.hurtT - dt); t.recoil = Math.max(0, t.recoil - 7 * dt); t.muzzle = Math.max(0, t.muzzle - dt); }
+}
+
+// ---------- update ----------
+function update(dt) {
+  tick += dt;
+  // player (while dead in capture the flag you just wait to respawn)
+  const p = player;
+  if (p.hp > 0) {
+  let ix = (keys.d || keys.arrowright ? 1 : 0) - (keys.a || keys.arrowleft ? 1 : 0);
+  let iy = (keys.s || keys.arrowdown ? 1 : 0) - (keys.w || keys.arrowup ? 1 : 0);
+  let mag = 1;
+  const ms = stickVec(touch.move) || pad.move;
+  if (ms) { ix = ms.x; iy = ms.y; mag = ms.mag; }              // analog: push further = faster
+  const il = Math.hypot(ix, iy) || 1;
+  p.vx = ix / il * P_SPEED * mag; p.vy = iy / il * P_SPEED * mag;
+  if (flag && flag.carried) { p.vx *= 0.9; p.vy *= 0.9; }          // the flag is heavy
+  stillFor = Math.hypot(p.vx, p.vy) < 5 ? stillFor + dt : 0;
+  if (ix || iy) { p.body += angDiff(p.body, Math.atan2(iy, ix)) * Math.min(1, dt * 10); }
+  drive(p, p.vx * dt, p.vy * dt);
+  updateCam(dt);
+  const as = stickVec(touch.aim) || pad.aim;
+  let aimFiring = false;
+  if (touch.fire && !touch.aim) manualUntil = 0;             // MISSILE alone = hand control back to auto-aim
+  autoErr = 0;
+  if (touch.aim || pad.aim || tick < manualUntil) {
+    // manual aim: ease toward the thumb (smooths jitter, assist nudges onto enemies); in the dead zone or just
+    // after release it HOLDS the aim instead of snapping to auto-aim
+    if (as) {
+      const dA = angDiff(p.turret, assistAim(p, Math.atan2(as.y, as.x)));
+      const step = Math.min(Math.abs(dA) * PAD_AIM_EASE, PAD_AIM_MAX) * dt;   // touch + controller: ease in gently, cap turn rate so flicks don't snap
+      p.turret += Math.sign(dA) * Math.min(Math.abs(dA), step);
+      aimFiring = !!touch.aim && as.mag >= AIM_FIRE;         // push out past the dashed ring to fire the cannon (phone only; pads use the triggers)
+    }
+    if (touch.aim || pad.aim) manualUntil = tick + AIM_HOLD;
+  } else if (lastInput === "pad") {
+    /* controller: the turret stays where the right stick left it */
+  } else if (touchMode) { assistLock = null; if (touch.fire) autoAim(p, dt); else autoTarget = null; }   // phone: turret only tracks an enemy while MISSILE is held, else it holds your aim
+  else p.turret = Math.atan2(mouse.y + cam.y - p.y, mouse.x + cam.x - p.x);
+  touchLock = touchMode && lastInput !== "pad" && touch.aim && p.hp > 0 ? pickShellTarget(p) : null;
+  p.cd -= dt; p.missileGap -= dt;
+  if (flag && p.hp > 0 && p.ammo < MISSILE_MAX) { p.missileT += dt; if (p.missileT >= MISSILE_RELOAD) { p.ammo++; p.missileT = 0; } } else if (p.ammo >= MISSILE_MAX) p.missileT = 0;   // capture the flag: spent missiles recharge, one every MISSILE_RELOAD seconds
+  if (!keys[" "] && !mouse.down && !keys.p && !keys.v && !pad.fire && !pad.missile && !pad.launch) fireHold = false;
+  if ((((mouse.down && !touchMode) || keys[" "]) && !fireHold) || aimFiring || (pad.fire && !fireHold)) {
+    const held = lockHeld && lockTarget && lockTarget.hp > 0 ? lockTarget : null;
+    if (held || !aimFiring || !touchLock) fire(p, p.turret, P_BULLET, 0, held);
+    else fire(p, p.turret, P_BULLET, 0, touchLock, TOUCH_SHELL_TURN, TOUCH_SHELL_CONE);      // phone: auto-lock the shot onto the enemy nearest the aim
+  }       // cannon (curves slightly toward a locked target)
+  // missiles: P or V (mouse aim) or the MISSILE button (auto-aims first; with the aim pad held it fires along your aim)
+  // P / V / MISSILE button: hold to lock, launches once when locked. Lift and press again for the next.
+  const autoKey = keys.p || keys.v || touch.fire || pad.missile;
+  lockHeld = autoKey;
+  const missileOK = !(touch.fire && !touch.aim && !keys.p && !keys.v && !pad.missile) || (autoTarget && autoErr < 0.45);
+  if (!autoKey) missileSpent = false; else if (fireHold) missileSpent = true;
+  // hold to lock: the seeker must stay on one enemy for LOCK_TIME before anything launches; locked, it keeps firing
+  const cand = lockHeld && missileOK ? seek({ x: p.x, y: p.y, ang: p.turret, owner: p }) : null;
+  if (!cand) lockT = 0, lockTarget = null;
+  else if (cand !== lockTarget) { lockTarget = cand; lockT = 0; }
+  else lockT = Math.min(LOCK_TIME, lockT + dt);
+  if (lockTarget && lockT >= LOCK_TIME) {
+    const padOnly = pad.missile && !keys.p && !keys.v && !touch.fire;      // controller: LT only locks, RB launches
+    if (padOnly) { if (pad.edges[5] && launchMissile(p, lockTarget)) missileSpent = true; }
+    else if (!missileSpent && launchMissile(p, lockTarget)) missileSpent = true;
+  }
+  if (tick - lastMoveSample > 0.5) {
+    lastMoveSample = tick;
+    playerMoves.push(ix || iy ? compass(Math.atan2(iy, ix)) : "stood still");
+    if (playerMoves.length > 6) playerMoves.shift();
+  }
+  }
+
+  // enemies
+  for (const t of tanks) {
+    if (t.isPlayer || t.hp <= 0) continue;
+    const rage = flag && flag.carried && p.hp > 0 ? RAGE : null;          // flag carrier: enemies are faster, shoot sooner and farther, and see farther
+    t.cd -= dt * (rage ? rage.fire : 1); t.orderT -= dt;
+    const sees = p.hp > 0 && dist(t, p) < SIGHT_RANGE * D.sight * (rage ? rage.sight : 1) && los(t, p);
+    if (!t.alert) {
+      if (sees) alertTank(t);
+      else { t.vx = t.vy = 0; t.turret = t.body + 0.45 * Math.sin(tick * 0.7 + t.seed); continue; }       // standing guard, scanning
+    }
+    let o = t.orderT > 0 ? t.order : { move: "wait" };
+    // reflex: only a small safety net now; dodging is mostly JEV's call (see think())
+    const thr = threatFor(t);
+    if (thr && thr.eta < 0.7) {
+      if (t.reflexFor !== thr.b) { t.reflexFor = thr.b; t.reflexOn = Math.random() < levelCfg(level).reflex; }
+      if (t.reflexOn) o = { move: "dodge" };
+    }
+    const toP = Math.atan2(p.y - t.y, p.x - t.x), d = dist(t, p);
+    let dir = null;
+    switch (o && o.move) {
+      case "charge": {                                   // straight at you if the way is open, otherwise follow a route around obstacles
+        dir = toP;
+        if (!clearLine(t.x, t.y, p.x, p.y, t.r)) {
+          t.pathT = (t.pathT || 0) - dt;
+          if (!t.path || t.pathT <= 0) { t.path = findPath(t.x, t.y, p.x, p.y, t.r); t.pathT = 0.5; }
+          while (t.path && t.path.length > 1 && Math.hypot(t.path[0].x - t.x, t.path[0].y - t.y) < 26) t.path.shift();
+          if (t.path && t.path.length) dir = Math.atan2(t.path[0].y - t.y, t.path[0].x - t.x);
+        } else t.path = null;
+        break;
+      }
+      case "back": dir = toP + Math.PI; break;
+      case "left": dir = toP - Math.PI / 2; break;
+      case "right": dir = toP + Math.PI / 2; break;
+      case "dodge": {
+        const th = threatFor(t);
+        if (th) { const b = th.b, n = Math.atan2(b.vy, b.vx); dir = n + (th.side > 0 ? -1 : 1) * Math.PI / 2; }
+        break;
+      }
+    }
+    // don't ram: stop advancing when very close
+    if (o.move === "charge" && d < 110 && !t.path) dir = null;
+    let sx = 0, sy = 0;
+    if (dir !== null) {
+      const sp = E_SPEED * D.spd * (t.spd || 1) * (rage ? rage.speed : 1);
+      sx = Math.cos(dir) * sp; sy = Math.sin(dir) * sp;
+      if (o.move === "dodge") { sx *= 1.4; sy *= 1.4; }
+      t.body += angDiff(t.body, dir) * Math.min(1, dt * 6);
+    }
+    t.vx = sx; t.vy = sy;
+    const bx = t.x, by = t.y;
+    drive(t, sx * dt, sy * dt);
+    // slide along walls if stuck
+    if (dir !== null && Math.hypot(t.x - bx, t.y - by) < Math.hypot(sx, sy) * dt * 0.3) {
+      drive(t, -sy * dt, sx * dt);
+    }
+
+    // aim + fire
+    // auto-aim: the turret always tracks the player and leads their movement; level sets how well
+    const cfg = levelCfg(level);
+    const T = d / (E_BULLET * D.bullet);
+    const aimAt = Math.atan2(p.y + p.vy * T * cfg.lead - t.y, p.x + p.vx * T * cfg.lead - t.x);
+    // no sight, no aim: the turret rests along the hull direction and only swings to you once you're visible
+    const turn = cfg.turn * (rage ? rage.turn : 1) * dt;
+    t.turret += clamp(angDiff(t.turret, sees ? aimAt : t.body), -turn, turn);
+    const k = Math.min(1, stillFor / STILL_RAMP);                             // 0 = moving, 1 = has been still a while
+    const gate = ENEMY_AIM_GATE + (STILL_GATE - ENEMY_AIM_GATE) * k;
+    if (sees && d < ENEMY_FIRE_RANGE * (rage ? rage.range : 1) && Math.abs(angDiff(t.turret, aimAt)) < gate) {
+      fire(t, t.turret, E_BULLET * D.bullet, gauss() * cfg.err * (t.errMul || 1) * (1 + (STILL_SPREAD - 1) * k));
+    }
+  }
+
+  // damaged tanks smoke, badly damaged ones burn
+  for (const t of tanks) {
+    if (t.hp <= 0) continue;
+    const ratio = t.hp / t.maxhp;
+    if (ratio > 0.5) continue;
+    t.smokeT -= dt;
+    if (t.smokeT <= 0) {
+      t.smokeT = ratio <= 0.34 ? 0.07 : 0.16;
+      smoke(t.x + rnd(-8, 8), t.y + rnd(-6, 6), 6 + (1 - ratio) * 5, 0.9, rnd(-10, 10), -rnd(25, 45), ratio <= 0.34 ? "#2d2b27" : "#6a665c", 0.5);
+      if (ratio <= 0.34 && Math.random() < 0.5) addFx({ kind: "fire", x: t.x + rnd(-8, 8), y: t.y + rnd(-6, 6), vx: rnd(-12, 12), vy: -rnd(25, 60), size: rnd(4, 8), life: 0.4, max: 0.4, col: Math.random() < .5 ? "#ff8a2a" : "#ffd24a", drag: 1.5 });
+    }
+  }
+
+  // bullets: cannon shells and homing missiles
+  for (const b of bullets) {
+    if (b.type === "missile") {
+      if (!b.target || b.target.hp <= 0) b.target = seek(b);
+      if (b.target) b.ang += clamp(angDiff(b.ang, Math.atan2(b.target.y - b.y, b.target.x - b.x)), -MISSILE_TURN * dt, MISSILE_TURN * dt);
+      b.speed = Math.min(MISSILE_SPEED, b.speed + 1000 * dt);
+      b.vx = Math.cos(b.ang) * b.speed; b.vy = Math.sin(b.ang) * b.speed;
+      b.trailT -= dt;
+      if (b.trailT <= 0) {
+        b.trailT = 0.018;
+        smoke(b.x - Math.cos(b.ang) * 9, b.y - Math.sin(b.ang) * 9, 4.5, 0.55, -b.vx * 0.05, -b.vy * 0.05, "#c9c5b6", 0.45);
+        addFx({ kind: "fire", x: b.x - Math.cos(b.ang) * 8, y: b.y - Math.sin(b.ang) * 8, vx: 0, vy: 0, size: 4, life: 0.12, max: 0.12, col: "#ffb347" });
+      }
+    }
+    else if (b.target && b.target.hp > 0) {                // shell fired while locked on: bends a little toward the target
+      const sp = Math.hypot(b.vx, b.vy), want = angDiff(Math.atan2(b.vy, b.vx), Math.atan2(b.target.y - b.y, b.target.x - b.x));
+      if (Math.abs(want) < b.cone) { const a = Math.atan2(b.vy, b.vx) + clamp(want, -b.turn * dt, b.turn * dt); b.vx = Math.cos(a) * sp; b.vy = Math.sin(a) * sp; }
+    }
+    b.x += b.vx * dt; b.y += b.vy * dt; b.life -= dt;
+    if (b.life <= 0 || hitsWallPt(b.x, b.y)) {
+      b.dead = true;
+      if (b.type === "missile") explosion(b.x, b.y, false);
+      else { sparks(b.x, b.y, 5, "#cfc59a", 150); stampScorch(b.x, b.y, 4); }
+      continue;
+    }
+    for (const t of tanks) {
+      if (t.hp <= 0 || t === b.owner || t.isPlayer === b.owner.isPlayer) continue;
+      if (Math.hypot(t.x - b.x, t.y - b.y) < t.r + (b.type === "missile" ? 5 : 3)) {
+        b.dead = true;
+        if (b.type === "missile") explosion(b.x, b.y, false);
+        hurt(t, b.dmg, b.x, b.y);
+        break;
+      }
+    }
+  }
+  bullets = bullets.filter(b => !b.dead);
+  updateFx(dt);
+
+  // capture the flag
+  if (toast) { toast.t -= dt; if (toast.t <= 0) toast = null; }
+  if (flag) {
+    if (!flag.carried && player.hp > 0 && dist(player, flag) < 40) {
+      flag.carried = true; toast = { title: "FLAG TAKEN!", sub: "Get it back to your base. The enemy is alerted", t: 4, max: 4 };
+      for (const t of tanks) if (!t.isPlayer && t.hp > 0) alertTank(t);
+    }
+    if (flag.carried) { flag.x = player.x - Math.cos(player.body) * 14; flag.y = player.y - Math.sin(player.body) * 14; }
+    if (flag.carried && Math.hypot(player.x - flag.base[0], player.y - flag.base[1]) < 70) { flag.captured = true; flag.carried = false; flag.x = flag.base[0]; flag.y = flag.base[1]; }
+  }
+  // end conditions
+  if (flag) updateRespawns(dt);
+  if (gameMode === "free") updateFree(dt);
+  if (player.hp <= 0 && !flag) mode = "dead";
+  else if (gameMode !== "free" && (flag ? flag.captured : tanks.every(t => t.isPlayer || t.hp <= 0))) { mode = "won"; if (gameMode === "campaign") { cleared.add(level); saveProgress(); } }
+
+  const underFire = tanks.some(t => !t.isPlayer && t.hp > 0 && threatFor(t));
+  if (mode === "play" && !inflight && (underFire || performance.now() - lastThink > THINK_MS)) {
+    lastThink = performance.now(); think();
+  }
+}
+// capture the flag: destroyed tanks come back after a cooldown (the player at their base, enemies at their posts)
+function updateRespawns(dt) {
+  for (const t of tanks) {
+    if (t.hp > 0) { t.respawnT = undefined; continue; }
+    if (t.respawnT === undefined) {
+      t.respawnT = t.isPlayer ? RESPAWN_PLAYER : RESPAWN_ENEMY * (D.cd > 1 ? 1.15 : D.cd < 1 ? 0.85 : 1);
+      if (t.isPlayer && flag.carried) {                                   // dropped the flag: it snaps back to the enemy base
+        flag.carried = false; flag.x = flag.home[0]; flag.y = flag.home[1];
+        toast = { title: "FLAG LOST", sub: "It went back to the enemy base", t: 3.5, max: 3.5 };
+      }
+    }
+    t.respawnT -= dt;
+    if (t.respawnT > 0) continue;
+    let [hx, hy] = t.isPlayer ? flag.base : [WW / 2, WH / 2];                // you return to your base; enemies pour in from the middle of the map
+    if (!t.isPlayer) for (let i = 0; i < 40; i++) {
+      const x = WW / 2 + (i ? rnd(-160, 160) : 0), y = WH / 2 + (i ? rnd(-160, 160) : 0);
+      if (!hitsWall(x, y, t.r + 8) && tanks.every(o => o === t || o.hp <= 0 || dist(o, { x, y }) > 60)) { hx = x; hy = y; break; }
+    }
+    if (!t.isPlayer && tanks.some(o => o.isPlayer && o.hp > 0 && dist(o, { x: hx, y: hy }) < 260)) { t.respawnT = 0.5; continue; }   // never spawn on top of you
+    if (t.isPlayer && tanks.some(o => !o.isPlayer && o.hp > 0 && dist(o, { x: hx, y: hy }) < 120)) { t.respawnT = 0.5; continue; }
+    t.hp = t.maxhp; t.x = hx; t.y = hy; t.vx = t.vy = 0; t.cd = 0.5; t.flash = 0.4;
+    t.body = t.turret = t.isPlayer ? 0 : t.homeAng;
+    if (t.isPlayer) { t.ammo = MISSILE_MAX; t.invuln = RESPAWN_GRACE; updateCam(0, true); toast = { title: "RESPAWNED", sub: "", t: 1.5, max: 1.5 }; }
+    else { t.alert = flag.carried; t.orderT = 0; sparks(hx, hy, 14, "#ffe9a0", 180); }
+  }
+  if (player.invuln > 0) player.invuln -= dt;
+}
+function hitsWallPt(x, y) {
+  return x < 0 || y < 0 || x > WW || y > WH || walls.some(w => x >= w.x && x <= w.x + w.w && y >= w.y && y <= w.y + w.h);
+}
+
+// ---------- textures (procedural, pre-rendered) ----------
+function makeCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function rrect(x, y, w, h, r) {            // rounded-rect path on the main context
+  g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath();
+}
+
+const groundTex = makeCanvas(W, H), vignetteRed = makeCanvas(W, H);
+let decal = makeCanvas(W, H), dg = decal.getContext("2d"), groundPat = null;
+const WALL_H = 14;                                     // how tall walls look (px of visible south face)
+
+function buildGround() {                               // a seamless 960x640 dirt tile, repeated across the world
+  const x = groundTex.getContext("2d"), r = mulberry32(7);
+  const wrap = (px, py, rad, fn) => { for (const dx of [-W, 0, W]) for (const dy of [-H, 0, H]) { const qx = px + dx, qy = py + dy; if (qx > -rad && qx < W + rad && qy > -rad && qy < H + rad) fn(qx, qy); } };
+  x.fillStyle = "#454a34"; x.fillRect(0, 0, W, H);
+  for (let i = 0; i < 46; i++) {                         // soft light / dark patches
+    const px = r() * W, py = r() * H, rad = 50 + r() * 140, light = r() < .5;
+    wrap(px, py, rad, (qx, qy) => {
+      const b = x.createRadialGradient(qx, qy, 0, qx, qy, rad);
+      b.addColorStop(0, light ? "rgba(130,128,84,.17)" : "rgba(18,22,10,.22)"); b.addColorStop(1, "rgba(0,0,0,0)");
+      x.fillStyle = b; x.fillRect(qx - rad, qy - rad, rad * 2, rad * 2);
+    });
+  }
+  for (let i = 0; i < 7000; i++) {                       // dirt speckle
+    const light = r() < .5;
+    x.fillStyle = light ? `rgba(215,205,150,${.04 + r() * .10})` : `rgba(10,12,6,${.06 + r() * .14})`;
+    x.fillRect(r() * W, r() * H, 1 + r() * 1.6, 1 + r() * 1.6);
+  }
+  for (let i = 0; i < 260; i++) {                        // pebbles with a little shadow and highlight
+    const px = r() * W, py = r() * H, rx = 1.5 + r() * 3.2, col = `rgb(${110 + r() * 40 | 0},${108 + r() * 36 | 0},${88 + r() * 30 | 0})`;
+    wrap(px, py, 8, (qx, qy) => {
+      x.fillStyle = "rgba(0,0,0,.28)"; x.beginPath(); x.ellipse(qx + 1, qy + 1.5, rx, rx * .7, 0, 0, 7); x.fill();
+      x.fillStyle = col; x.beginPath(); x.ellipse(qx, qy, rx, rx * .7, 0, 0, 7); x.fill();
+      x.fillStyle = "rgba(255,255,230,.25)"; x.beginPath(); x.ellipse(qx - rx * .3, qy - rx * .25, rx * .4, rx * .22, 0, 0, 7); x.fill();
+    });
+  }
+  x.lineWidth = 1;
+  for (let i = 0; i < 340; i++) {                        // grass tufts
+    const px = r() * W, py = r() * H;
+    x.strokeStyle = `rgba(${70 + r() * 30 | 0},${100 + r() * 40 | 0},${50 + r() * 20 | 0},.55)`;
+    for (let k = 0; k < 4; k++) { x.beginPath(); x.moveTo(px + k * 1.5, py); x.lineTo(px + k * 1.5 + (r() - .5) * 4, py - 3 - r() * 5); x.stroke(); }
+  }
+  groundPat = g.createPattern(groundTex, "repeat");
+}
+function buildVignette() {
+  const x = vignetteRed.getContext("2d");
+  const gr = x.createRadialGradient(W / 2, H / 2, H * 0.28, W / 2, H / 2, W * 0.62);
+  gr.addColorStop(0, "rgba(200,0,0,0)"); gr.addColorStop(0.62, "rgba(220,24,12,.34)"); gr.addColorStop(1, "rgba(150,0,0,.92)");
+  x.fillStyle = gr; x.fillRect(0, 0, W, H);
+}
+// every wall becomes a raised block: a brick top face plus a darker south face, with a soft shadow cast to the south-east
+function buildWorld() {
+  const r = mulberry32(100 + level), D = WALL_H;
+  for (const w of walls) {
+    const c = makeCanvas(w.w, w.h + D), x = c.getContext("2d");
+    const gr = x.createLinearGradient(0, 0, 0, w.h); gr.addColorStop(0, "#8c9684"); gr.addColorStop(1, "#5d6657");
+    x.fillStyle = gr; x.fillRect(0, 0, w.w, w.h);
+    x.save(); x.beginPath(); x.rect(0, 0, w.w, w.h); x.clip();
+    const bh = 16, bw = 34;
+    for (let row = 0; row * bh < w.h; row++) {           // bricks, each a slightly different shade
+      const off = (row % 2) * bw / 2;
+      for (let cx = -bw; cx < w.w + bw; cx += bw) {
+        const bx = cx + off, by = row * bh, sh = (r() - .5) * .16;
+        x.fillStyle = sh > 0 ? `rgba(255,255,230,${sh})` : `rgba(0,0,0,${-sh})`; x.fillRect(bx + 1, by + 1, bw - 2, bh - 2);
+        x.fillStyle = "rgba(255,255,255,.11)"; x.fillRect(bx + 1, by + 1, bw - 2, 2);
+        x.fillStyle = "rgba(0,0,0,.2)"; x.fillRect(bx + 1, by + bh - 3, bw - 2, 2);
+      }
+    }
+    x.strokeStyle = "rgba(18,22,14,.6)"; x.lineWidth = 1.5;     // mortar
+    for (let row = 0; row * bh <= w.h; row++) {
+      const off = (row % 2) * bw / 2; x.beginPath(); x.moveTo(0, row * bh); x.lineTo(w.w, row * bh); x.stroke();
+      for (let cx = -bw; cx < w.w + bw; cx += bw) { x.beginPath(); x.moveTo(cx + off, row * bh); x.lineTo(cx + off, (row + 1) * bh); x.stroke(); }
+    }
+    for (let i = 0; i < Math.max(6, w.w * w.h / 900); i++) {    // moss and grime
+      const px = r() * w.w, py = r() * w.h, rad = 3 + r() * 9, moss = r() < .45;
+      const b = x.createRadialGradient(px, py, 0, px, py, rad);
+      b.addColorStop(0, moss ? "rgba(80,120,50,.32)" : "rgba(10,10,6,.3)"); b.addColorStop(1, "rgba(0,0,0,0)");
+      x.fillStyle = b; x.fillRect(px - rad, py - rad, rad * 2, rad * 2);
+    }
+    x.restore();
+    x.fillStyle = "rgba(255,255,255,.4)"; x.fillRect(0, 0, w.w, 2); x.fillRect(0, 0, 2, w.h);                       // lit top/left edge of the top face
+    x.fillStyle = "rgba(0,0,0,.25)"; x.fillRect(0, w.h - 2, w.w, 2); x.fillRect(w.w - 2, 0, 2, w.h);
+    // south face: darker, in shade
+    const fg = x.createLinearGradient(0, w.h, 0, w.h + D); fg.addColorStop(0, "#4a5245"); fg.addColorStop(1, "#262b24");
+    x.fillStyle = fg; x.fillRect(0, w.h, w.w, D);
+    x.strokeStyle = "rgba(10,12,8,.65)"; x.lineWidth = 1.3;
+    for (let cx = -bw; cx < w.w + bw; cx += bw) { const bxx = cx + ((w.w * 7) % bw); x.beginPath(); x.moveTo(bxx, w.h); x.lineTo(bxx, w.h + D); x.stroke(); }
+    x.fillStyle = "rgba(255,255,255,.14)"; x.fillRect(0, w.h, w.w, 1.5); x.fillStyle = "rgba(0,0,0,.45)"; x.fillRect(0, w.h + D - 2, w.w, 2);
+    w.sprite = c;
+    const pad = 26, sc = makeCanvas(w.w + pad * 2, w.h + pad * 2), sx = sc.getContext("2d");   // soft cast shadow
+    sx.shadowColor = "rgba(0,0,0,.55)"; sx.shadowBlur = 12; sx.fillStyle = "rgba(0,0,0,.55)"; sx.fillRect(pad + 2, pad + 2, w.w, w.h);
+    w.shadow = sc; w.shadowPad = pad;
+  }
+  for (const m of moats) {                               // water sunk into the ground: dark deep middle, lighter shallow edge, sandy bank
+    const pad = 9, c = makeCanvas(m.w + pad * 2, m.h + pad * 2), x = c.getContext("2d");
+    const rad = Math.min(10, m.w / 2, m.h / 2);
+    const path = (ox, oy, ww, hh, rr) => { x.beginPath(); x.moveTo(ox + rr, oy); x.arcTo(ox + ww, oy, ox + ww, oy + hh, rr); x.arcTo(ox + ww, oy + hh, ox, oy + hh, rr); x.arcTo(ox, oy + hh, ox, oy, rr); x.arcTo(ox, oy, ox + ww, oy, rr); x.closePath(); };
+    path(pad - 6, pad - 6, m.w + 12, m.h + 12, rad + 4); x.fillStyle = "#6f6a4c"; x.fill();                    // dirt/sand bank
+    path(pad - 6, pad - 6, m.w + 12, m.h + 12, rad + 4); x.strokeStyle = "rgba(0,0,0,.35)"; x.lineWidth = 2; x.stroke();
+    path(pad, pad, m.w, m.h, rad); x.fillStyle = "#1c5a73"; x.fill();
+    x.save(); path(pad, pad, m.w, m.h, rad); x.clip();
+    const wg = x.createLinearGradient(0, pad, 0, pad + m.h); wg.addColorStop(0, "#2f86a3"); wg.addColorStop(0.5, "#1b5f7d"); wg.addColorStop(1, "#134a63");
+    x.fillStyle = wg; x.fillRect(pad, pad, m.w, m.h);
+    x.strokeStyle = "rgba(160,225,240,.28)"; x.lineWidth = 6; path(pad + 3, pad + 3, m.w - 6, m.h - 6, rad); x.stroke();      // shallows near the bank
+    const sg = x.createLinearGradient(0, pad, 0, pad + 16); sg.addColorStop(0, "rgba(0,10,20,.55)"); sg.addColorStop(1, "rgba(0,10,20,0)"); x.fillStyle = sg; x.fillRect(pad, pad, m.w, 16);   // north bank's shadow
+    x.restore();
+    x.strokeStyle = "rgba(255,255,255,.2)"; x.lineWidth = 1.2; path(pad, pad + m.h - 1, m.w, 1, 0); x.stroke();
+    m.sprite = c; m.pad = pad;
+  }
+}
+function stampTread(t) {                                  // two short track marks, rotated with the hull
+  dg.save(); dg.translate(t.x, t.y); dg.rotate(t.body); dg.fillStyle = "rgba(14,14,8,.11)";
+  dg.fillRect(-4, -14 * TANK_SCALE * 0.75 - 2, 8, 4); dg.fillRect(-4, 14 * TANK_SCALE * 0.75 - 2, 8, 4); dg.restore();
+}
+function stampScorch(x, y, r) {
+  const b = dg.createRadialGradient(x, y, 0, x, y, r);
+  b.addColorStop(0, "rgba(8,8,6,.55)"); b.addColorStop(0.6, "rgba(10,10,6,.28)"); b.addColorStop(1, "rgba(0,0,0,0)");
+  dg.fillStyle = b; dg.fillRect(x - r, y - r, r * 2, r * 2);
+}
+buildGround(); buildVignette();
+
+// ---------- draw ----------
+const PAL = {
+  player: { hi: "#7dbe82", mid: "#4f9058", lo: "#2e5b3b", dark: "#1b3524", t1: "#93d296", t2: "#3d7a4c" },
+  enemy:  { hi: "#dc8a6b", mid: "#b05a45", lo: "#783428", dark: "#451d17", t1: "#e69c82", t2: "#8c4233" },
+  heavy:  { hi: "#8e9fd6", mid: "#5568a8", lo: "#323d6e", dark: "#171c3a", t1: "#a4b3e6", t2: "#3f4f8c" },
+  gunner: { hi: "#f2d273", mid: "#d79d2b", lo: "#8d5d15", dark: "#4a2e0a", t1: "#f7de93", t2: "#a8741c" },
+};
+function star(cx, cy, R, r) {
+  g.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? r : R; g.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad); }
+  g.closePath();
+}
+function drawTank(t, scale = TANK_SCALE) {
+  const S = scale * (t.sz || 1), pal = t.isPlayer ? PAL.player : PAL[t.kind] || PAL.enemy;
+  const jx = t.hurtT > 0 ? (Math.random() - .5) * t.hurtT * 9 : 0, jy = t.hurtT > 0 ? (Math.random() - .5) * t.hurtT * 9 : 0;
+  // ground shadow
+  g.save(); g.translate(t.x + 9 * S / 1.3, t.y + 12 * S / 1.3); g.rotate(t.body); g.scale(S, S); g.fillStyle = "rgba(0,0,0,.3)"; rrect(-21, -18, 42, 36, 8); g.fill(); g.restore();
+  g.save(); g.translate(t.x + jx, t.y + jy); g.scale(S, S); g.rotate(t.body);
+  g.save(); g.rotate(-t.body); g.translate(0, 3.4); g.rotate(t.body); g.fillStyle = "#0b0d0a"; rrect(-21, -18, 42, 36, 6); g.fill(); g.restore();   // the hull's thickness (side face)
+  // treads with moving pads, road wheels
+  for (const sy of [-1, 1]) {
+    const y0 = sy < 0 ? -18 : 10;
+    g.fillStyle = "#171a16"; rrect(-21, y0, 42, 8, 3); g.fill();
+    g.fillStyle = "#3b413a"; const off = (t.tread / S) % 4;
+    for (let px = -20 + off; px < 20; px += 4) g.fillRect(px, y0 + 0.8, 1.7, 6.4);
+    g.fillStyle = "#262b25"; for (const wx of [-15, -7.5, 0, 7.5, 15]) { g.beginPath(); g.arc(wx, y0 + 4, 3, 0, 7); g.fill(); }
+    g.fillStyle = "rgba(255,255,255,.16)"; for (const wx of [-15, -7.5, 0, 7.5, 15]) { g.beginPath(); g.arc(wx - 0.8, y0 + 3.2, 1, 0, 7); g.fill(); }
+    g.fillStyle = "rgba(255,255,255,.09)"; g.fillRect(-20, y0 + 0.5, 40, 1);
+  }
+  // hull
+  const hg = g.createLinearGradient(-18, -11, 14, 12); hg.addColorStop(0, pal.hi); hg.addColorStop(0.5, pal.mid); hg.addColorStop(1, pal.lo);
+  g.fillStyle = hg; rrect(-18, -11, 36, 22, 5); g.fill();
+  g.strokeStyle = pal.dark; g.lineWidth = 1.2; g.stroke();
+  g.fillStyle = "rgba(255,255,255,.14)"; g.beginPath(); g.moveTo(10, -10); g.lineTo(17, -7); g.lineTo(17, 7); g.lineTo(10, 10); g.closePath(); g.fill();   // sloped front plate
+  g.fillStyle = "rgba(0,0,0,.22)"; for (let i = 0; i < 4; i++) g.fillRect(-17 + i * 2.6, -7, 1.4, 14);                                             // engine grille
+  g.strokeStyle = "rgba(0,0,0,.28)"; g.lineWidth = 0.8; g.beginPath(); g.moveTo(-6, -10); g.lineTo(-6, 10); g.moveTo(9, -10); g.lineTo(9, 10); g.stroke();
+  g.fillStyle = pal.dark; for (const [rx, ry] of [[-15, -8.5], [-15, 8.5], [15, -8.5], [15, 8.5]]) { g.beginPath(); g.arc(rx, ry, 1, 0, 7); g.fill(); }
+  if (t.isPlayer) { g.fillStyle = "rgba(255,255,255,.75)"; star(-11.5, 0, 3.6, 1.6); g.fill(); }
+  else { g.strokeStyle = "rgba(20,8,6,.7)"; g.lineWidth = 1.6; g.beginPath(); g.moveTo(-14, -4); g.lineTo(-10, 0); g.lineTo(-14, 4); g.moveTo(-10, -4); g.lineTo(-6, 0); g.lineTo(-10, 4); g.stroke(); }
+  if (t.kind === "heavy") {                                  // bolted-on armor plates
+    g.fillStyle = "rgba(255,255,255,.2)"; rrect(9, -10.5, 9, 21, 3); g.fill(); rrect(-17.5, -10.5, 5, 21, 2); g.fill();
+    g.fillStyle = pal.dark; for (const ry of [-7, 0, 7]) { g.beginPath(); g.arc(13.5, ry, 1, 0, 7); g.fill(); }
+  } else if (t.kind === "gunner") {                          // racing stripes
+    g.fillStyle = "rgba(40,20,4,.55)"; g.fillRect(-4, -11, 2.4, 22); g.fillRect(0, -11, 2.4, 22);
+  }
+  // battle damage: scorch blotches, cracks
+  const ratio = t.hp / t.maxhp;
+  if (ratio < 0.67) {
+    const rs = mulberry32(t.seed * 977);
+    for (let i = 0; i < (ratio < 0.4 ? 5 : 3); i++) { const px = -12 + rs() * 24, py = -7 + rs() * 14, rad = 3 + rs() * 4; const b = g.createRadialGradient(px, py, 0, px, py, rad); b.addColorStop(0, "rgba(10,8,6,.6)"); b.addColorStop(1, "rgba(10,8,6,0)"); g.fillStyle = b; g.fillRect(px - rad, py - rad, rad * 2, rad * 2); }
+    if (ratio < 0.4) { g.strokeStyle = "rgba(10,8,6,.7)"; g.lineWidth = 0.9; for (let i = 0; i < 3; i++) { let cx = -12 + rs() * 24, cy = -7 + rs() * 14; g.beginPath(); g.moveTo(cx, cy); for (let k = 0; k < 4; k++) { cx += (rs() - .5) * 7; cy += (rs() - .5) * 6; g.lineTo(cx, cy); } g.stroke(); } }
+  }
+  if (t.flash > 0) { g.fillStyle = `rgba(255,255,255,${Math.min(.85, t.flash * 6)})`; rrect(-18, -11, 36, 22, 5); g.fill(); }
+  else if (t.hurtT > 0) { g.fillStyle = `rgba(255,40,24,${t.hurtT * .5})`; rrect(-18, -11, 36, 22, 5); g.fill(); }
+  // turret + barrel (with recoil) + muzzle flash
+  g.save(); g.rotate(-t.body); g.translate(1.6, 2.2); g.rotate(t.body); g.fillStyle = "rgba(0,0,0,.30)"; rrect(-10, -8.5, 20, 17, 6); g.fill(); g.restore();   // turret's shadow on the hull
+  g.rotate(-t.body); g.translate(0, -2.6); g.rotate(t.body);                 // the turret sits higher than the hull
+  g.rotate(-t.body + t.turret);
+  const rc = t.recoil * 4;
+  const bg = g.createLinearGradient(0, -3, 0, 3); bg.addColorStop(0, "#7d837b"); bg.addColorStop(0.5, "#4a4f48"); bg.addColorStop(1, "#262a25");
+  g.fillStyle = bg; g.fillRect(6 - rc, -2.8, 22, 5.6);
+  g.fillStyle = "#1e211d"; rrect(26 - rc, -4.2, 6, 8.4, 1.5); g.fill();
+  g.fillStyle = "rgba(255,255,255,.2)"; g.fillRect(6 - rc, -2.5, 22, 1);
+  const tg = g.createLinearGradient(-9, -8, 9, 8); tg.addColorStop(0, pal.t1); tg.addColorStop(1, pal.t2);
+  g.fillStyle = tg; rrect(-10, -8.5, 20, 17, 6); g.fill(); g.strokeStyle = pal.dark; g.lineWidth = 1.1; g.stroke();
+  g.fillStyle = "rgba(255,255,255,.18)"; rrect(-8, -7, 10, 5, 2.5); g.fill();
+  g.fillStyle = "#1b1e19"; g.beginPath(); g.arc(-2.5, 0, 4, 0, 7); g.fill();
+  g.strokeStyle = "rgba(255,255,255,.35)"; g.lineWidth = 0.8; g.beginPath(); g.arc(-2.5, 0, 4, 0, 7); g.stroke();
+  g.fillStyle = "#555b53"; g.beginPath(); g.arc(-2.5, 0, 2, 0, 7); g.fill();
+  if (t.muzzle > 0) {
+    g.globalCompositeOperation = "lighter";
+    const mf = g.createRadialGradient(33 - rc, 0, 0, 33 - rc, 0, 15);
+    mf.addColorStop(0, "rgba(255,246,200,.95)"); mf.addColorStop(0.4, "rgba(255,180,70,.6)"); mf.addColorStop(1, "rgba(255,120,20,0)");
+    g.fillStyle = mf; g.fillRect(18 - rc, -15, 32, 30); g.globalCompositeOperation = "source-over";
+  }
+  g.restore();
+  if (!t.isPlayer && scale === TANK_SCALE) {   // (S already includes the tank's own size)              // enemy health bar
+    const bw = 38 * S / 1.3, bx = t.x - bw / 2, by = t.y - 30 * S / 1.3 * (t.sz || 1), fr = t.hp / t.maxhp;
+    g.fillStyle = "rgba(0,0,0,.6)"; rrect(bx - 1.5, by - 1.5, bw + 3, 8, 4); g.fill();
+    const hb = g.createLinearGradient(bx, 0, bx + bw, 0); hb.addColorStop(0, "#ff5a3c"); hb.addColorStop(1, fr > .5 ? "#7bd66b" : "#ffb83c");
+    g.fillStyle = hb; rrect(bx, by, Math.max(2, bw * fr), 5, 2.5); g.fill();
+    g.fillStyle = "rgba(0,0,0,.45)"; for (let i = 1; i < t.maxhp; i++) g.fillRect(bx + bw * i / t.maxhp - 0.5, by, 1, 5);
+  }
+}
+
+function drawArenaMarks(cx, cy) {                        // painted lines + steel frame at the world's edge
+  g.save(); g.strokeStyle = "rgba(232,222,170,.10)"; g.lineWidth = 2; g.setLineDash([14, 12]);
+  g.strokeRect(24, 24, WW - 48, WH - 48);
+  if (WW === W && WH === H) { g.beginPath(); g.moveTo(W / 2, 24); g.lineTo(W / 2, H - 24); g.stroke(); g.beginPath(); g.arc(W / 2, H / 2, 72, 0, 7); g.stroke(); }
+  g.restore();
+  for (const [x0, y0, x1, y1, rx, ry, rw, rh] of [[0, 0, 40, 0, 0, 0, 40, WH], [WW, 0, WW - 40, 0, WW - 40, 0, 40, WH], [0, 0, 0, 40, 0, 0, WW, 40], [0, WH, 0, WH - 40, 0, WH - 40, WW, 40]]) {
+    const gg = g.createLinearGradient(x0, y0, x1, y1); gg.addColorStop(0, "rgba(0,0,0,.45)"); gg.addColorStop(1, "rgba(0,0,0,0)"); g.fillStyle = gg; g.fillRect(rx, ry, rw, rh);
+  }
+  g.fillStyle = "#1f231b"; g.fillRect(0, 0, WW, 9); g.fillRect(0, WH - 9, WW, 9); g.fillRect(0, 0, 9, WH); g.fillRect(WW - 9, 0, 9, WH);
+  g.fillStyle = "rgba(255,255,255,.12)"; g.fillRect(0, 8, WW, 1); g.fillRect(8, 0, 1, WH);
+  g.fillStyle = "rgba(0,0,0,.5)"; g.fillRect(0, WH - 10, WW, 1); g.fillRect(WW - 10, 0, 1, WH);
+}
+function drawMoats(cx, cy) {
+  const c = clock();
+  for (const m of moats) {
+    if (m.x + m.w + 9 < cx || m.x - 9 > cx + W || m.y + m.h + 9 < cy || m.y - 9 > cy + H) continue;
+    g.drawImage(m.sprite, m.x - m.pad, m.y - m.pad);
+    g.save(); g.beginPath(); g.rect(m.x, m.y, m.w, m.h); g.clip();            // drifting ripples + glints
+    g.lineWidth = 1.4; g.lineCap = "round";
+    const n = Math.max(3, Math.round(m.w * m.h / 1800));
+    for (let i = 0; i < n; i++) {
+      const h = Math.sin(i * 91.7) * 43758.5453, fx = h - Math.floor(h), h2 = Math.sin(i * 12.9 + 4.1) * 24634.6, fy = h2 - Math.floor(h2);
+      const x = m.x + ((fx * m.w + c * (6 + (i % 3) * 3)) % m.w), y = m.y + fy * m.h, a = 0.18 + 0.16 * Math.sin(c * 1.7 + i);
+      g.strokeStyle = `rgba(210,240,250,${a})`; g.beginPath(); g.moveTo(x - 7, y); g.quadraticCurveTo(x, y - 2.5, x + 7, y); g.stroke();
+    }
+    g.restore();
+  }
+}
+function drawBases() {                                    // pads on the ground: yours (green) and theirs (red)
+  const c = clock();
+  for (const [bx, by, col] of [[flag.base[0], flag.base[1], "155,227,124"], [flag.home[0], flag.home[1], "255,110,90"]]) {
+    g.save(); g.translate(bx, by);
+    const rg = g.createRadialGradient(0, 0, 10, 0, 0, 74); rg.addColorStop(0, `rgba(${col},.22)`); rg.addColorStop(1, `rgba(${col},.04)`);
+    g.fillStyle = rg; g.beginPath(); g.arc(0, 0, 74, 0, 7); g.fill();
+    g.strokeStyle = `rgba(${col},${0.55 + 0.25 * Math.sin(c * 3)})`; g.lineWidth = 3; g.setLineDash([12, 9]); g.lineDashOffset = -c * 14;
+    g.beginPath(); g.arc(0, 0, 70, 0, 7); g.stroke(); g.restore();
+  }
+}
+function drawFlag(x, y, col, carried) {                    // pole + a cloth that ripples
+  const c = clock(), h = carried ? 40 : 50;
+  g.save(); g.translate(x, y);
+  g.fillStyle = "rgba(0,0,0,.3)"; g.beginPath(); g.ellipse(6, 4, 9, 4, 0, 0, 7); g.fill();
+  g.strokeStyle = "#cfd3c8"; g.lineWidth = 3; g.lineCap = "round"; g.beginPath(); g.moveTo(0, 2); g.lineTo(0, -h); g.stroke();
+  g.fillStyle = col; g.strokeStyle = "rgba(0,0,0,.5)"; g.lineWidth = 1;
+  g.beginPath(); g.moveTo(1, -h); for (let i = 0; i <= 8; i++) g.lineTo(1 + i * 3.6, -h + Math.sin(c * 7 - i * 0.7) * 2.4 * (i / 8));
+  for (let i = 8; i >= 0; i--) g.lineTo(1 + i * 3.6, -h + 17 + Math.sin(c * 7 - i * 0.7) * 2.4 * (i / 8));
+  g.closePath(); g.fill(); g.stroke();
+  g.restore();
+}
+function goalArrow() {                                     // gold arrow at the screen edge toward the flag (or your base once you hold it)
+  const gx = flag.carried ? flag.base[0] : flag.x, gy = flag.carried ? flag.base[1] : flag.y, sx = gx - cam.x, sy = gy - cam.y;
+  if (sx > 40 && sx < W - 40 && sy > 40 && sy < H - 40) return;
+  const ang = Math.atan2(sy - H / 2, sx - W / 2), ex = clamp(W / 2 + Math.cos(ang) * 700, 34, W - 34), ey = clamp(H / 2 + Math.sin(ang) * 700, 34, H - 34);
+  g.save(); g.translate(ex, ey); g.rotate(ang); g.shadowColor = "#ffd05a"; g.shadowBlur = 10;
+  g.fillStyle = flag.carried ? "#9be37c" : "#ffd05a"; g.beginPath(); g.moveTo(16, 0); g.lineTo(-10, -12); g.lineTo(-4, 0); g.lineTo(-10, 12); g.closePath(); g.fill(); g.restore();
+}
+function drawToast() {
+  const k = Math.min(1, toast.t / 0.5, (toast.max - toast.t) / 0.25 + 0.0), a = clamp(k, 0, 1);
+  g.save(); g.globalAlpha = a; g.fillStyle = "rgba(8,12,9,.72)"; rrect(W / 2 - 330, 110, 660, 96, 16); g.fill();
+  g.strokeStyle = "rgba(255,208,90,.7)"; g.lineWidth = 2; rrect(W / 2 - 329, 111, 658, 94, 16); g.stroke();
+  titleText(toast.title, 158, 40, "#fff3b0", "#e5a627");
+  g.font = `600 16px ${FONT}`; g.fillStyle = "#e6ecdc"; g.textAlign = "center"; g.fillText(toast.sub, W / 2, 190);
+  g.restore();
+}
+function offscreenArrows() {                              // little red arrows at the screen edge pointing at awake enemies you can't see
+  g.save();
+  for (const t of tanks) {
+    if (t.isPlayer || t.hp <= 0 || !t.alert) continue;
+    const sx = t.x - cam.x, sy = t.y - cam.y;
+    if (sx > 0 && sx < W && sy > 0 && sy < H) continue;
+    const ang = Math.atan2(sy - H / 2, sx - W / 2), ex = clamp(W / 2 + Math.cos(ang) * 600, 26, W - 26), ey = clamp(H / 2 + Math.sin(ang) * 600, 26, H - 26);
+    g.translate(ex, ey); g.rotate(ang); g.fillStyle = "rgba(255,90,60,.85)"; g.beginPath(); g.moveTo(11, 0); g.lineTo(-7, -8); g.lineTo(-3, 0); g.lineTo(-7, 8); g.closePath(); g.fill();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+  }
+  g.restore();
+}
+function drawMinimap() {
+  const k = Math.min(170 / WW, 118 / WH), mw = WW * k, mh = WH * k, mx = W - 14 - mw, my = H - 14 - mh;
+  g.save(); g.fillStyle = "rgba(10,14,11,.7)"; rrect(mx - 5, my - 5, mw + 10, mh + 10, 8); g.fill();
+  g.fillStyle = "#3b4130"; g.fillRect(mx, my, mw, mh);
+  g.fillStyle = "#2c7a98"; for (const m of moats) g.fillRect(mx + m.x * k, my + m.y * k, Math.max(1.5, m.w * k), Math.max(1.5, m.h * k));
+  g.fillStyle = "#8b9486"; for (const w of walls) g.fillRect(mx + w.x * k, my + w.y * k, Math.max(1.5, w.w * k), Math.max(1.5, w.h * k));
+  for (const t of tanks) if (!t.isPlayer && t.hp > 0) { g.fillStyle = (PAL[t.kind] || PAL.enemy).hi; g.beginPath(); g.arc(mx + t.x * k, my + t.y * k, t.alert ? 3 : 2.2, 0, 7); g.fill(); }
+  if (flag) { g.fillStyle = "#9be37c"; g.fillRect(mx + flag.base[0] * k - 3, my + flag.base[1] * k - 3, 6, 6); g.fillStyle = "#ff6e5a"; g.fillRect(mx + (flag.carried ? flag.x : flag.home[0]) * k - 3, my + (flag.carried ? flag.y : flag.home[1]) * k - 3, 6, 6); }
+  g.strokeStyle = "rgba(255,255,255,.55)"; g.lineWidth = 1; g.strokeRect(mx + cam.x * k, my + cam.y * k, W * k, H * k);
+  g.fillStyle = "#9be37c"; g.beginPath(); g.arc(mx + player.x * k, my + player.y * k, 3.4, 0, 7); g.fill(); g.strokeStyle = "#0b1a0e"; g.stroke();
+  g.restore();
+}
+function drawFx() {
+  for (const f of fx) {
+    const k = 1 - f.life / f.max;
+    switch (f.kind) {
+      case "smoke": g.globalAlpha = Math.max(0, (1 - k) * f.a); g.fillStyle = f.col; g.beginPath(); g.arc(f.x, f.y, f.size * (1 + k * f.grow), 0, 7); g.fill(); break;
+      case "fire": g.globalCompositeOperation = "lighter"; g.globalAlpha = Math.max(0, 1 - k); g.fillStyle = f.col; g.beginPath(); g.arc(f.x, f.y, f.size * (1 - k * 0.5), 0, 7); g.fill(); g.globalCompositeOperation = "source-over"; break;
+      case "spark": g.globalAlpha = Math.max(0, 1 - k); g.strokeStyle = f.col; g.lineWidth = 2; g.beginPath(); g.moveTo(f.x, f.y); g.lineTo(f.x - f.vx * 0.04, f.y - f.vy * 0.04); g.stroke(); break;
+      case "debris": g.globalAlpha = Math.max(0, 1 - k * k); g.save(); g.translate(f.x, f.y); g.rotate(f.rot); g.fillStyle = f.col; g.fillRect(-f.size / 2, -f.size / 2, f.size, f.size * 0.6); g.restore(); break;
+      case "ring": g.globalAlpha = Math.max(0, 1 - k); g.strokeStyle = f.col; g.lineWidth = 1 + 4 * (1 - k); g.beginPath(); g.arc(f.x, f.y, f.size + k * f.grow, 0, 7); g.stroke(); break;
+      case "flash": { g.globalCompositeOperation = "lighter"; g.globalAlpha = Math.max(0, 1 - k); const fr = f.size * (0.6 + k); const fg = g.createRadialGradient(f.x, f.y, 0, f.x, f.y, fr); fg.addColorStop(0, f.col); fg.addColorStop(1, "rgba(255,160,40,0)"); g.fillStyle = fg; g.fillRect(f.x - fr, f.y - fr, fr * 2, fr * 2); g.globalCompositeOperation = "source-over"; break; }
+    }
+  }
+  g.globalAlpha = 1;
+}
+
+function drawBullet(b) {
+  const a = b.type === "missile" ? b.ang : Math.atan2(b.vy, b.vx), friendly = b.owner.isPlayer;
+  g.save(); g.translate(b.x, b.y); g.rotate(a);
+  if (b.type === "missile") {
+    g.globalCompositeOperation = "lighter";
+    const fl = 7 + Math.random() * 5, fg = g.createLinearGradient(-fl - 8, 0, -6, 0); fg.addColorStop(0, "rgba(255,120,20,0)"); fg.addColorStop(1, "rgba(255,210,100,.95)");
+    g.fillStyle = fg; g.beginPath(); g.moveTo(-6, -3); g.lineTo(-8 - fl, 0); g.lineTo(-6, 3); g.closePath(); g.fill();
+    g.globalCompositeOperation = "source-over";
+    g.fillStyle = "#d9dde2"; rrect(-7, -2.6, 13, 5.2, 2); g.fill();                         // body
+    g.fillStyle = "#ff4d28"; g.beginPath(); g.moveTo(6, -2.6); g.lineTo(12, 0); g.lineTo(6, 2.6); g.closePath(); g.fill();   // nose
+    g.fillStyle = "#8d969a"; g.beginPath(); g.moveTo(-7, -2.6); g.lineTo(-10, -6); g.lineTo(-3, -2.6); g.closePath(); g.fill();
+    g.beginPath(); g.moveTo(-7, 2.6); g.lineTo(-10, 6); g.lineTo(-3, 2.6); g.closePath(); g.fill();                              // fins
+    g.fillStyle = "rgba(255,255,255,.55)"; g.fillRect(-5, -2, 9, 1);
+  } else {
+    g.globalCompositeOperation = "lighter";
+    const tg = g.createLinearGradient(-16, 0, 0, 0); tg.addColorStop(0, "rgba(255,255,255,0)"); tg.addColorStop(1, friendly ? "rgba(255,230,120,.9)" : "rgba(255,110,90,.9)");
+    g.fillStyle = tg; g.fillRect(-16, -1.6, 16, 3.2);
+    const gg = g.createRadialGradient(0, 0, 0, 0, 0, 9); gg.addColorStop(0, friendly ? "rgba(255,240,170,.9)" : "rgba(255,150,120,.9)"); gg.addColorStop(1, "rgba(255,120,40,0)");
+    g.fillStyle = gg; g.fillRect(-9, -9, 18, 18);
+    g.globalCompositeOperation = "source-over";
+    g.fillStyle = friendly ? "#fff7c8" : "#ffd0c0"; g.beginPath(); g.arc(0, 0, 3.2, 0, 7); g.fill();
+  }
+  g.restore();
+}
+
+// rotating corner brackets on a target
+function lockOn(t, col, size = 27) {
+  const R = size * TANK_SCALE, rot = clock() * 1.6;
+  g.save(); g.translate(t.x, t.y); g.rotate(rot); g.strokeStyle = col; g.lineWidth = 2.2;
+  for (let i = 0; i < 4; i++) { g.rotate(Math.PI / 2); g.beginPath(); g.moveTo(R, -R * 0.45); g.lineTo(R, -R); g.lineTo(R * 0.45, -R); g.stroke(); }
+  g.restore();
+}
+
+function draw() {
+  const demo = mode === "title";
+  g.setTransform(1, 0, 0, 1, 0, 0);
+  g.globalAlpha = 1;
+  if (mode === "map") { drawMap(); syncMissileUI(); return; }
+  if (mode === "settings") { drawSettings(); return; }
+  const cx = demo ? 0 : cam.x, cy = demo ? 0 : cam.y, big = !demo && (WW > W || WH > H);
+  g.save();
+  if (shake > 0.1) g.translate((Math.random() - .5) * shake * 2, (Math.random() - .5) * shake * 2);
+  g.translate(-cx, -cy);
+  g.fillStyle = groundPat; g.fillRect(cx - 24, cy - 24, W + 48, H + 48);                  // dirt, tiled in world space
+  g.drawImage(decal, cx, cy, W, H, cx, cy, W, H);                                          // tread marks + scorch
+  if (!demo) drawArenaMarks(cx, cy);
+  if (!demo) drawMoats(cx, cy);
+  if (!demo && flag) drawBases();
+  if (!demo) for (const w of walls) if (w.x + w.w + w.shadowPad > cx && w.x - w.shadowPad < cx + W && w.y + w.h + w.shadowPad > cy && w.y - w.shadowPad < cy + H)
+    g.drawImage(w.shadow, w.x - w.shadowPad + 8, w.y - w.shadowPad + 7 + WALL_H * 0.4);   // cast shadows lie on the ground, under everything
+  // walls and tanks are painted back-to-front so a tank behind a wall is covered by it and one in front covers its south face
+  const items = [];
+  if (!demo) for (const w of walls) if (w.x + w.w > cx && w.x < cx + W && w.y + w.h > cy && w.y - WALL_H < cy + H) items.push({ y: w.y + w.h, w });
+  if (!demo && flag) items.push({ y: flag.y, flagItem: true });
+  for (const t of (demo ? demoTanks() : tanks)) if (t.hp > 0) items.push({ y: t.y, t });
+  items.sort((u, v) => u.y - v.y);
+  for (const it of items) { if (it.w) g.drawImage(it.w.sprite, it.w.x, it.w.y - WALL_H); else if (it.flagItem) drawFlag(flag.x, flag.y, "#e0453a", flag.carried); else drawTank(it.t, demo ? TANK_SCALE * 1.7 : TANK_SCALE); }
+  if (!demo) {
+    for (const b of bullets) drawBullet(b);
+    for (const b of bullets) if (b.type === "missile" && b.target && b.target.hp > 0) lockOn(b.target, "rgba(255,90,60,.95)");   // missile seeker lock
+    drawFx();
+    if (showBrain && mode === "play") {
+      g.font = `600 11px ${FONT}`; g.textAlign = "center";
+      for (const t of tanks) if (!t.isPlayer && t.hp > 0 && t.brain) {
+        const y = t.y + 22 * TANK_SCALE, label = `${t.brain.id} ${(t.brain.p * 100) | 0}%`, w = label.length * 6.4 + 14;
+        g.fillStyle = "rgba(8,12,10,.72)"; rrect(t.x - w / 2, y, w, 17, 8); g.fill();
+        g.fillStyle = "#9fe3ff"; g.fillText(label, t.x, y + 12);
+      }
+    }
+    if (mode === "play") worldOverlay();                 // lock-on indicator (desktop and phone) + aim guide (phone)
+  }
+  g.restore();
+  if (big && mode === "play") offscreenArrows();
+  if (flag && mode === "play") goalArrow();
+  if (flag && mode === "play" && player.hp <= 0 && player.respawnT > 0) {     // down in capture the flag: respawn countdown
+    g.save(); g.textAlign = "center"; g.fillStyle = "rgba(10,0,0,.35)"; g.fillRect(0, 0, W, H);
+    g.fillStyle = "#ffb0a0"; g.font = `900 46px ${FONT}`; g.fillText("DESTROYED", W / 2, H / 2 - 10);
+    g.fillStyle = "#fff"; g.font = `700 20px ${FONT}`; g.fillText(`Respawning in ${Math.ceil(player.respawnT)}`, W / 2, H / 2 + 28); g.restore();
+  }
+  if (toast && mode === "play") drawToast();
+  if (!demo && !touchMode && lastInput !== "pad" && mode === "play") {          // crosshair (screen space)
+    g.strokeStyle = "rgba(255,255,255,.75)"; g.lineWidth = 1.5; g.beginPath(); g.arc(mouse.x, mouse.y, 9, 0, 7);
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) { g.moveTo(mouse.x + dx * 6, mouse.y + dy * 6); g.lineTo(mouse.x + dx * 15, mouse.y + dy * 15); } g.stroke();
+  }
+
+  // red edges: a quick flash when hit, and a pulsing warning while armor is low
+  if (!demo && player) {
+    const low = player.hp > 0 && player.hp <= 2 ? (0.22 + 0.16 * Math.sin(clock() * 7)) * (3 - player.hp) / 2 : 0;
+    const a = Math.min(1, hurtFlash * 0.78 + low);
+    if (a > 0.01) { g.globalAlpha = a; g.drawImage(vignetteRed, 0, 0); g.globalAlpha = 1; }
+    if (hurtFlash > 0.02) { g.fillStyle = `rgba(255,30,20,${hurtFlash * 0.09})`; g.fillRect(0, 0, W, H); }
+  }
+  if (!demo && player && mode !== "title") drawHUD();
+  if (touchMode && mode === "play") touchOverlay();
+  if (mode !== "play") banner();
+  if (padNote > 0) { g.save(); g.globalAlpha = Math.min(1, padNote); g.fillStyle = "rgba(10,14,11,.75)"; rrect(W / 2 - 150, H - 58, 300, 34, 17); g.fill(); g.fillStyle = "#d6ddcf"; g.font = `700 14px ${FONT}`; g.textAlign = "center"; g.fillText("Controller connected", W / 2, H - 36); g.restore(); }
+  syncMissileUI();
+}
+
+// ---------- HUD ----------
+function drawRocket(x, y, len, on, fill = 1) {            // small rocket icon pointing right
+  g.save(); g.translate(x, y); g.globalAlpha = on ? 1 : 0.28;
+  g.fillStyle = on ? "#eef2f6" : "#8a918c"; rrect(0, -len * .13, len * .7, len * .26, len * .08); g.fill();
+  g.fillStyle = on ? "#ff4d28" : "#7a5a52"; g.beginPath(); g.moveTo(len * .7, -len * .13); g.lineTo(len, 0); g.lineTo(len * .7, len * .13); g.closePath(); g.fill();
+  g.fillStyle = on ? "#a6aeb2" : "#6c7370"; g.beginPath(); g.moveTo(0, -len * .13); g.lineTo(-len * .1, -len * .3); g.lineTo(len * .22, -len * .13); g.closePath(); g.fill();
+  g.beginPath(); g.moveTo(0, len * .13); g.lineTo(-len * .1, len * .3); g.lineTo(len * .22, len * .13); g.closePath(); g.fill();
+  if (!on && fill > 0) { g.globalAlpha = 0.9; g.fillStyle = "#ffb347"; g.fillRect(0, len * .2, len * fill, len * .06); }   // reload progress under a spent missile
+  g.restore();
+}
+function drawHUD() {
+  const s = touchMode ? 1.3 : 1, p = player, cfg = levelCfg(level);
+  const px = 12, py = 12, pw = 232 * s, ph = 76 * s;
+  g.fillStyle = "rgba(10,14,11,.62)"; rrect(px, py, pw, ph, 10 * s); g.fill();
+  g.strokeStyle = "rgba(255,255,255,.14)"; g.lineWidth = 1; rrect(px + .5, py + .5, pw - 1, ph - 1, 10 * s); g.stroke();
+  g.textAlign = "left"; g.fillStyle = "#cfd8c6"; g.font = `700 ${11 * s}px ${FONT}`;
+  const free = gameMode === "free";
+  g.fillText(gameMode === "campaign" ? `LEVEL ${level + 1} · ${cfg.name.toUpperCase()}` : free ? "FREESTYLE" : "RANDOM FLAG", px + 12 * s, py + 19 * s);
+  const foes = tanks.filter(t => !t.isPlayer && t.hp > 0).length;
+  g.textAlign = "right"; g.fillStyle = "#ffb8a6"; g.fillText(free ? `KILLS ${kills}` : `FOES ${foes}`, px + pw - 12 * s, py + 19 * s);
+  if (free) {                                                // ultimate armor: one full gold bar
+    const sy = py + 28 * s, sx = px + 12 * s, sw2 = pw - 24 * s, gg = g.createLinearGradient(0, sy, 0, sy + 13 * s);
+    gg.addColorStop(0, "#fff0a0"); gg.addColorStop(1, "#e0a020"); g.fillStyle = gg; rrect(sx, sy, sw2, 13 * s, 3 * s); g.fill();
+    g.fillStyle = "#4a3200"; g.font = `900 ${10 * s}px ${FONT}`; g.textAlign = "center"; g.fillText("ULTIMATE ARMOR", sx + sw2 / 2, sy + 10.5 * s);
+  }
+  // armor: segmented bar that turns amber then red and pulses when low
+  const segs = free ? 0 : p.maxhp, sw = (pw - 24 * s - (segs - 1) * 4 * s) / segs, ratio = p.hp / p.maxhp;
+  const col = ratio > 0.6 ? ["#9be37c", "#3f9d4b"] : ratio > 0.34 ? ["#ffd36a", "#d9902a"] : ["#ff7a68", "#c4271a"];
+  const pulse = p.hp > 0 && p.hp <= 2 ? 0.6 + 0.4 * Math.sin(clock() * 9) : 1;
+  for (let i = 0; i < segs; i++) {
+    const sx = px + 12 * s + i * (sw + 4 * s), sy = py + 28 * s;
+    g.fillStyle = "rgba(255,255,255,.08)"; rrect(sx, sy, sw, 13 * s, 3 * s); g.fill();
+    if (i < p.hp) { const gg = g.createLinearGradient(0, sy, 0, sy + 13 * s); gg.addColorStop(0, col[0]); gg.addColorStop(1, col[1]); g.globalAlpha = pulse; g.fillStyle = gg; rrect(sx, sy, sw, 13 * s, 3 * s); g.fill(); g.fillStyle = "rgba(255,255,255,.28)"; g.fillRect(sx + 2 * s, sy + 1.5 * s, sw - 4 * s, 2 * s); g.globalAlpha = 1; }
+  }
+  // missiles: one rocket per charge; the next one shows its reload progress
+  const rl = flag ? p.missileT / MISSILE_RELOAD : 0;
+  for (let i = 0; i < MISSILE_MAX; i++) drawRocket(px + 12 * s + i * 40 * s, py + 58 * s, 32 * s, i < p.ammo, i === p.ammo ? rl : 0);
+  g.textAlign = "left"; g.fillStyle = "#9aa493"; g.font = `600 ${10 * s}px ${FONT}`; g.fillText(gameMode === "free" ? "∞ unlimited · hold to lock" : touchMode ? "hold to lock" : lastInput === "pad" ? "LT hold to lock · RB fire" : "P / V · hold to lock", px + 12 * s + 3 * 40 * s, py + 62 * s);
+  if (flag) {                                                // objective, always visible
+    const msg = flag.carried ? "RETURN THE FLAG TO YOUR BASE" : "CAPTURE THE ENEMY FLAG";
+    g.fillStyle = "rgba(10,14,11,.62)"; rrect(px, py + ph + 6, pw, 26 * s, 8 * s); g.fill();
+    g.fillStyle = flag.carried ? "#9be37c" : "#ffd05a"; g.font = `800 ${11 * s}px ${FONT}`; g.textAlign = "left";
+    g.fillText("⚑ " + msg, px + 10 * s, py + ph + 6 + 17 * s);
+  }
+  if (WW > W || WH > H) drawMinimap();
+  // JEV status chip, bottom-left
+  const lj = JEV_MODE === "local" ? localJev : null;
+  const label = lj && lj.state === "loading" ? `JEV ${lj.stage || "loading"} ${lj.pct}%${lj.prev ? " (last run died: " + lj.prev + ")" : ""}` : lj && lj.state === "error" ? `JEV local: ${lj.why}`
+    : jevCalls === 0 && !jevOK ? "JEV…" : jevOK ? `JEV${lj ? " local" : ""} ${jevMs.toFixed(0)}ms` : "JEV OFFLINE";
+  const cw = 18 * s + label.length * 6.6 * s;
+  g.fillStyle = "rgba(10,14,11,.62)"; rrect(12, H - 12 - 22 * s, cw, 22 * s, 11 * s); g.fill();
+  g.fillStyle = jevOK ? "#7fe08a" : "#ff7a68"; g.beginPath(); g.arc(24 * s * 0.75 + 4, H - 12 - 11 * s, 4 * s, 0, 7); g.fill();
+  g.textAlign = "left"; g.font = `600 ${11 * s}px ${FONT}`; g.fillStyle = "#d6ddcf"; g.fillText(label, 12 + 18 * s, H - 12 - 7 * s);
+}
+
+// touch HUD extras: pause button, lock ring, aim guide
+function touchOverlay() {                                  // screen-space part: the pause button
+  if (!player || player.hp <= 0) return;
+  g.fillStyle = "rgba(10,14,11,.62)"; rrect(W - 62, 10, 50, 36, 9); g.fill();
+  g.strokeStyle = "rgba(255,255,255,.18)"; g.lineWidth = 1; rrect(W - 61.5, 10.5, 49, 35, 9); g.stroke();
+  g.fillStyle = "#fff"; g.fillRect(W - 46, 18, 7, 20); g.fillRect(W - 32, 18, 7, 20);
+}
+function worldOverlay() {                                  // world-space part: lock rings and the aim guide
+  if (!player || player.hp <= 0) return;
+  if (lockHeld && mode === "play" && player.hp > 0) {          // seeker indicator at the tank from the moment you start holding
+    const pl = player, k = lockT / LOCK_TIME, full = k >= 1, col = full ? "#ff3b2a" : "#ffd05a";
+    g.save(); g.translate(pl.x, pl.y); g.strokeStyle = col; g.fillStyle = col; g.shadowColor = col; g.shadowBlur = 8; g.lineWidth = 2;
+    g.globalAlpha = 0.35 + 0.25 * Math.sin(tick * 12);
+    g.beginPath(); g.arc(0, 0, 70, pl.turret - SEEK_CONE, pl.turret + SEEK_CONE); g.stroke();                       // seeker cone
+    g.globalAlpha = 0.9; g.lineWidth = 4; g.beginPath(); g.arc(0, 0, 52, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke();   // lock progress
+    g.font = `800 12px ${FONT}`; g.textAlign = "center"; g.shadowBlur = 0;
+    g.fillText(full ? "LOCKED" : lockTarget ? "LOCKING…" : "NO TARGET", 0, -pl.r - 30);
+    g.restore();
+  }
+  if (lockHeld && lockTarget && lockTarget.hp > 0) {          // the tank being locked: brackets at once, ring fills with the lock
+    lockOn(lockTarget, lockT >= LOCK_TIME ? "rgba(255,59,42,.98)" : "rgba(255,208,90,.98)", 30);
+    const k = lockT / LOCK_TIME, R = lockTarget.r + 16 + (1 - k) * 22;
+    g.save(); g.strokeStyle = k >= 1 ? "#ff3b2a" : "#ffd05a"; g.lineWidth = 3; g.shadowColor = g.strokeStyle; g.shadowBlur = 10;
+    g.beginPath(); g.arc(lockTarget.x, lockTarget.y, R, -Math.PI / 2, -Math.PI / 2 + k * Math.PI * 2); g.stroke(); g.restore();
+  }
+  if (!touchMode && lastInput !== "pad") return;
+  if (touchLock && touchLock.hp > 0) lockOn(touchLock, touch.aim && touch.aim.mag >= AIM_FIRE ? "rgba(255,59,42,.98)" : "rgba(255,208,90,.98)", 28);   // the shot's auto-lock target
+  else if (autoTarget && autoTarget.hp > 0) lockOn(autoTarget, "rgba(255,233,122,.9)", 24);   // the enemy auto-aim / missile will go for
+  // pointer guide: where the turret points, stopping at the first wall
+  const p = player, ux = Math.cos(p.turret), uy = Math.sin(p.turret);
+  let len = 28 * TANK_SCALE;
+  while (len < 520 && !hitsWallPt(p.x + ux * len, p.y + uy * len)) len += 6;
+  const firing = !!touch.fire || (touch.aim && touch.aim.mag >= AIM_FIRE);
+  g.strokeStyle = firing ? "rgba(255,154,107,.9)" : "rgba(255,233,122,.8)"; g.lineWidth = 2; g.setLineDash([7, 9]);
+  g.beginPath(); g.moveTo(p.x + ux * 26 * TANK_SCALE, p.y + uy * 26 * TANK_SCALE); g.lineTo(p.x + ux * len, p.y + uy * len); g.stroke();
+  g.setLineDash([]);
+  const ex = p.x + ux * len, ey = p.y + uy * len;
+  g.beginPath(); g.arc(ex, ey, 7, 0, 7); g.moveTo(ex - 11, ey); g.lineTo(ex + 11, ey); g.moveTo(ex, ey - 11); g.lineTo(ex, ey + 11); g.stroke();
+  g.lineWidth = 1;
+}
+
+// two tanks squaring off behind the title screen
+let demoList = null;
+function demoTanks() {
+  if (!demoList) { demoList = [mkTank(86, 400, true, 5, 1), mkTank(874, 400, false, 3, 1)]; demoList[1].body = Math.PI; }
+  const c = clock(), [a, b] = demoList;
+  a.turret = 0.15 * Math.sin(c * .8); b.turret = Math.PI + 0.15 * Math.sin(c * .7 + 1);
+  a.y = 400 + 4 * Math.sin(c * 1.3); b.y = 400 + 4 * Math.sin(c * 1.1 + 2);
+  a.tread = b.tread = c * 18; a.recoil = Math.max(0, Math.sin(c * 2.2) - .85) * 6; a.muzzle = a.recoil > 0.4 ? .05 : 0;
+  return demoList;
+}
+
+function titleText(txt, y, size, fillA, fillB) {
+  g.font = `900 ${size}px ${FONT}`; g.textAlign = "center";
+  const gg = g.createLinearGradient(0, y - size, 0, y + 4); gg.addColorStop(0, fillA); gg.addColorStop(1, fillB);
+  g.lineJoin = "round"; g.lineWidth = size * 0.16; g.strokeStyle = "rgba(0,0,0,.75)"; g.strokeText(txt, W / 2, y);
+  g.fillStyle = gg; g.fillText(txt, W / 2, y);
+}
+// the main menu: searchlights, rising embers, a forged-steel logo, and three mode cards
+function drawTitleScreen() {
+  const c = clock(), tap = touchMode, sel = MENU[menuSel];
+  const dim = g.createRadialGradient(W / 2, H * 0.45, 60, W / 2, H / 2, W * .7);
+  dim.addColorStop(0, "rgba(10,14,10,.55)"); dim.addColorStop(1, "rgba(0,2,0,.92)");
+  g.fillStyle = dim; g.fillRect(0, 0, W, H);
+  g.save(); g.globalCompositeOperation = "lighter";                      // searchlight beams sweeping up from the bottom corners
+  for (const [bx, ph] of [[90, 0], [W - 90, 2]]) {
+    const a = -Math.PI / 2 + Math.sin(c * 0.45 + ph) * 0.55, spread = 0.11;
+    const gr = g.createRadialGradient(bx, H + 20, 20, bx, H + 20, 900); gr.addColorStop(0, "rgba(255,240,190,.28)"); gr.addColorStop(1, "rgba(255,240,190,0)");
+    g.fillStyle = gr; g.beginPath(); g.moveTo(bx, H + 20); g.lineTo(bx + Math.cos(a - spread) * 1000, H + 20 + Math.sin(a - spread) * 1000); g.lineTo(bx + Math.cos(a + spread) * 1000, H + 20 + Math.sin(a + spread) * 1000); g.closePath(); g.fill();
+  }
+  for (let i = 0; i < 46; i++) {                                         // embers drifting upward
+    const sp = 22 + (i * 37 % 40), x = (i * 211.7 + Math.sin(c * 0.6 + i) * 24) % W, y = H + 10 - ((c * sp + i * 97) % (H + 20)), life = 1 - (H + 10 - y) / (H + 20);
+    g.globalAlpha = life * (0.4 + 0.3 * Math.sin(c * 5 + i)); g.fillStyle = i % 3 ? "#ff9a3c" : "#ffd36a"; g.beginPath(); g.arc(x, y, 1 + (i % 3) * 0.7, 0, 7); g.fill();
+  }
+  g.restore();
+  // hazard stripes top and bottom
+  g.save(); for (const y0 of [0, H - 14]) { g.beginPath(); g.rect(0, y0, W, 14); g.clip(); g.fillStyle = "#1a1d17"; g.fillRect(0, y0, W, 14); g.fillStyle = "#d9a21f"; for (let x = -((c * 30) % 56); x < W; x += 56) { g.beginPath(); g.moveTo(x, y0 + 14); g.lineTo(x + 14, y0); g.lineTo(x + 36, y0); g.lineTo(x + 22, y0 + 14); g.fill(); } g.restore(); g.save(); }
+  g.restore();
+  // emblem: spinning ring of chevrons behind the logo
+  g.save(); g.translate(W / 2, 112); g.globalAlpha = 0.28; g.strokeStyle = "#ffd36a"; g.lineWidth = 2;
+  g.rotate(c * 0.25); g.beginPath(); g.arc(0, 0, 92, 0, 7); g.stroke(); g.setLineDash([6, 12]); g.beginPath(); g.arc(0, 0, 104, 0, 7); g.stroke(); g.setLineDash([]);
+  for (let i = 0; i < 12; i++) { g.save(); g.rotate(i * Math.PI / 6); g.translate(92, 0); g.beginPath(); g.moveTo(-7, -6); g.lineTo(2, 0); g.lineTo(-7, 6); g.stroke(); g.restore(); }
+  g.restore();
+  // logo
+  const pulse = 0.5 + 0.5 * Math.sin(c * 2);
+  g.save(); g.shadowColor = `rgba(255,150,40,${0.45 + pulse * 0.35})`; g.shadowBlur = 26 + pulse * 14;
+  titleText("TANK BATTLE", 128, 92, "#fff6d0", "#c28a22"); g.restore();
+  const sh = (c * 0.5 % 1.6 - 0.3) * W;                                   // glint sweeping across the lettering
+  g.save(); g.font = `900 92px ${FONT}`; g.textAlign = "center"; g.globalCompositeOperation = "lighter";
+  const gl = g.createLinearGradient(sh - 60, 0, sh + 60, 0); gl.addColorStop(0, "rgba(255,255,255,0)"); gl.addColorStop(.5, "rgba(255,255,255,.55)"); gl.addColorStop(1, "rgba(255,255,255,0)");
+  g.fillStyle = gl; g.fillText("TANK BATTLE", W / 2, 128); g.restore();
+  g.textAlign = "center"; g.font = `800 15px ${FONT}`; g.fillStyle = "#e0b45a";
+  g.fillText("★   E V E R Y   E N E M Y   I S   S T E E R E D   B Y   J E V   ★", W / 2, 164);
+  // mode cards
+  const btns = uiButtons();
+  btns.forEach(b => {
+    if (b.id.slice(0, 2) !== "m:") return;
+    const i = +b.id.slice(2), m = MENU[i], on = i === menuSel, ox = 0;
+    g.save();
+    const bg = g.createLinearGradient(b.x, 0, b.x + b.w, 0); bg.addColorStop(0, on ? m.col + "55" : "rgba(14,18,13,.82)"); bg.addColorStop(1, "rgba(10,14,11,.82)");
+    if (on) { g.shadowColor = m.col; g.shadowBlur = 16 + 8 * Math.sin(c * 5); }
+    g.fillStyle = bg; rrect(b.x + ox, b.y, b.w, b.h, 14); g.fill(); g.shadowBlur = 0;
+    g.strokeStyle = on ? m.col : "rgba(255,255,255,.22)"; g.lineWidth = on ? 3 : 1.5; rrect(b.x + ox + .5, b.y + .5, b.w - 1, b.h - 1, 14); g.stroke();
+    // icon badge
+    const ix = b.x + 42, iy = b.y + b.h / 2; g.fillStyle = on ? m.col : "#6b7466"; g.beginPath(); g.arc(ix, iy, 24, 0, 7); g.fill(); g.strokeStyle = "#10140f"; g.lineWidth = 2.5; g.fillStyle = "#10140f";
+    if (i === 0) { g.beginPath(); g.moveTo(ix - 12, iy + 12); g.lineTo(ix - 12, iy - 12); g.lineTo(ix + 12, iy - 12); g.stroke(); g.beginPath(); g.moveTo(ix - 12, iy + 12); g.lineTo(ix + 12, iy - 12); g.stroke(); g.beginPath(); g.arc(ix + 12, iy - 12, 3.5, 0, 7); g.fill(); }
+    else if (i === 1) { g.fillRect(ix - 11, iy - 14, 2.5, 28); g.beginPath(); g.moveTo(ix - 8.5, iy - 14); g.lineTo(ix + 12, iy - 7); g.lineTo(ix - 8.5, iy); g.closePath(); g.fill(); }
+    else { g.beginPath(); g.moveTo(ix - 14, iy + 3); g.bezierCurveTo(ix - 14, iy - 12, ix, iy - 12, ix, iy + 3); g.bezierCurveTo(ix, iy + 18, ix + 14, iy + 18, ix + 14, iy + 3); g.bezierCurveTo(ix + 14, iy - 12, ix, iy - 12, ix, iy + 3); g.lineWidth = 4; g.stroke(); }
+    g.textAlign = "left"; g.fillStyle = on ? "#fff" : "#d6ddcf"; g.font = `900 25px ${FONT}`; g.fillText(m.title, b.x + 84, b.y + 31);
+    g.fillStyle = on ? "#e6ecdc" : "#8d9886"; g.font = `600 13.5px ${FONT}`; g.fillText(m.sub, b.x + 84, b.y + 52);
+    if (on) { g.textAlign = "right"; g.fillStyle = m.col; g.font = `900 26px ${FONT}`; g.fillText("▶", b.x + b.w - 22 + 4 * Math.sin(c * 7), b.y + 41); }
+    g.restore();
+  });
+  g.textAlign = "center"; g.font = `700 12px ${FONT}`; g.fillStyle = "#a9b59e"; g.fillText("DIFFICULTY" + (tap ? "" : "   ·   ← →"), W / 2, 498);
+  for (const b of btns) if (b.id[0] === "d") drawButton(b, DIFFS[b.id.slice(2)].label, b.id === "d:" + diffName);
+  drawButton(btns.find(b => b.id === "settings"), "SETTINGS" + (lastInput === "pad" && padConnected ? " · Y" : tap ? "" : " · O"), false);
+  const map = btns.find(b => b.id === "map"); drawButton(map, "LEVEL MAP" + (lastInput === "pad" && padConnected ? " · SELECT" : tap ? "" : " · M"), false);
+  g.font = `800 17px ${FONT}`; g.textAlign = "center"; g.globalAlpha = 0.55 + 0.45 * Math.sin(c * 4); g.fillStyle = sel.col;
+  g.fillText(lastInput === "pad" && padConnected ? "D-PAD TO CHOOSE  ·  A TO START" : tap ? "TAP A MODE TO START" : "↑ ↓ TO CHOOSE  ·  ENTER TO START  ·  OR PRESS 1 2 3", W / 2, 566); g.globalAlpha = 1;
+  g.font = `600 12.5px ${FONT}`; g.fillStyle = "#8d9886";
+  const info = tap ? "left pad: move  ·  right pad: aim, push out to fire  ·  hold MISSILE to lock on"
+                   : padConnected ? "left stick move · right stick aim · RT / A cannon · hold LT to lock, RB launches missiles"
+                   : "WASD move  ·  mouse aim  ·  SPACE / click: cannon  ·  hold P or V to lock on, missiles chase";
+  g.fillText(info, W / 2, 596); g.fillText("Q (when paused): back to this menu", W / 2, 616);
+}
+function banner() {
+  if (mode === "title") { drawTitleScreen(); return; }
+  const c = clock(), tap = touchMode;
+  const dim = g.createRadialGradient(W / 2, H / 2, 80, W / 2, H / 2, W * .65);
+  dim.addColorStop(0, mode === "dead" ? "rgba(48,4,2,.6)" : "rgba(6,9,6,.40)"); dim.addColorStop(1, mode === "dead" ? "rgba(20,0,0,.88)" : "rgba(2,4,2,.80)");
+  g.fillStyle = dim; g.fillRect(0, 0, W, H);
+  const prompt = {
+    title: tap ? "TAP TO START" : "PRESS ENTER OR SPACE TO START", paused: tap ? "TAP TO RESUME" : "PRESS ESC TO RESUME",
+    dead: tap ? "TAP TO RETRY" : "PRESS ENTER OR SPACE TO RETRY", won: tap ? "TAP FOR NEXT LEVEL" : "PRESS ENTER OR SPACE FOR NEXT LEVEL",
+  }[mode];
+  const padPrompt = { title: "PRESS A TO START", paused: "PRESS START TO RESUME", dead: "PRESS A TO RETRY", won: "PRESS A FOR NEXT LEVEL" }[mode];
+  if (mode === "title") {
+    titleText("TANK BATTLE", H * 0.30, 78, "#f4f7e8", "#9fb07a");
+    g.font = `600 17px ${FONT}`; g.fillStyle = "#c9d3bd"; g.textAlign = "center";
+    g.fillText("every enemy tank is steered by JEV, live", W / 2, H * 0.30 + 34);
+    g.font = `600 14px ${FONT}`; g.fillStyle = "#a9b59e";
+    const info = tap ? ["left pad: move   ·   right pad: aim, push out to fire the cannon", "hold MISSILE on a target to lock on, then rockets chase"]
+                     : ["WASD move   ·   mouse aim   ·   SPACE or click: cannon", "hold P or V on a target to lock on, then missiles chase"];
+    if (padConnected) info.splice(0, 2, "CONTROLLER · left stick: move   ·   right stick: aim   ·   RT / A: cannon", "hold LT to lock on, press RB to launch homing missiles   ·   SELECT: level map   ·   START: pause");
+    info.forEach((l, i) => g.fillText(l, W / 2, H * 0.68 + i * 24));
+    g.fillText("DIFFICULTY" + (tap ? "" : "   ·   keys 1-4 or ← →"), W / 2, H * 0.50 - 12);
+  } else if (mode === "paused") titleText("PAUSED", H / 2 - 6, 64, "#f4f7e8", "#aeb9a0");
+  else if (mode === "dead") {
+    titleText("DESTROYED", H / 2 - 24, 74, "#ffb0a0", "#d42a1c");
+    g.font = `600 17px ${FONT}`; g.fillStyle = "#e8c4bc"; g.textAlign = "center"; g.fillText((gameMode === "campaign" ? `Level ${level + 1} · ` : "") + `${levelCfg(level).name} · ${kills} tank${kills === 1 ? "" : "s"} destroyed`, W / 2, H / 2 + 14);
+  } else if (mode === "won") {
+    titleText(flag ? "FLAG CAPTURED" : "LEVEL CLEARED", H / 2 - 24, 66, "#fff3b0", "#e5a627");
+    g.font = `600 17px ${FONT}`; g.fillStyle = "#e9e2bd"; g.textAlign = "center"; g.fillText(gameMode === "campaign" ? `Next: ${levelCfg(level + 1).name}` : "Next: a new random battlefield", W / 2, H / 2 + 14);
+  }
+  g.font = `800 20px ${FONT}`; g.textAlign = "center"; g.globalAlpha = 0.55 + 0.45 * Math.sin(c * 4); g.fillStyle = "#ffffff";
+  g.fillText(lastInput === "pad" && padConnected ? padPrompt : prompt, W / 2, mode === "title" ? H * 0.88 : H / 2 + 70); g.globalAlpha = 1;
+  for (const b of uiButtons()) drawButton(b, b.id === "settings" ? "SETTINGS" + (touchMode ? "" : "  ·  O") : b.id === "menu" ? "MAIN MENU" + (lastInput === "pad" && padConnected ? "  ·  B" : touchMode ? "" : "  ·  Q") : "LEVEL MAP" + (lastInput === "pad" && padConnected ? "  ·  SELECT" : touchMode ? "" : "  ·  M"), false);
+}
+function drawButton(b, label, on) {
+  g.save(); g.fillStyle = on ? "rgba(120,200,110,.35)" : "rgba(10,14,11,.7)"; rrect(b.x, b.y, b.w, b.h, 12); g.fill();
+  g.strokeStyle = on ? "#9be37c" : "rgba(255,255,255,.35)"; g.lineWidth = 1.5; rrect(b.x + .5, b.y + .5, b.w - 1, b.h - 1, 12); g.stroke();
+  g.fillStyle = "#e6ecdc"; g.font = `800 14px ${FONT}`; g.textAlign = "center"; g.fillText(label, b.x + b.w / 2, b.y + b.h / 2 + 5); g.restore();
+}
+function drawMap() {
+  const c = clock();
+  g.drawImage(groundTex, 0, 0); g.fillStyle = "rgba(6,10,6,.74)"; g.fillRect(0, 0, W, H);
+  titleText("SELECT LEVEL", 100, 54, "#f4f7e8", "#9fb07a");
+  g.save(); g.lineCap = "round"; g.lineJoin = "round"; g.strokeStyle = "rgba(255,255,255,.14)"; g.lineWidth = 8; g.setLineDash([2, 16]);
+  const pg = mapPage(), base = pg * MAP_N;
+  g.beginPath(); for (let j = 0; j < MAP_N; j++) { const n = nodePos(j); j ? g.lineTo(n.x, n.y) : g.moveTo(n.x, n.y); } g.stroke(); g.restore();
+  for (let j = 0; j < MAP_N; j++) {
+    const i = base + j, n = nodePos(j), done = cleared.has(i), open = unlocked(i), sel = i === mapSel, cfg = levelCfg(i);
+    const R = 44 + (sel ? 3 * Math.sin(c * 5) : 0);
+    const gr = g.createRadialGradient(n.x - 12, n.y - 14, 4, n.x, n.y, R);
+    if (done) { gr.addColorStop(0, "#9be37c"); gr.addColorStop(1, "#2f7a3d"); } else if (open) { gr.addColorStop(0, "#ffd36a"); gr.addColorStop(1, "#b26f1a"); } else { gr.addColorStop(0, "#5b6158"); gr.addColorStop(1, "#2a2e29"); }
+    g.save(); if (sel) { g.shadowColor = "#fff"; g.shadowBlur = 18; }
+    g.fillStyle = gr; g.beginPath(); g.arc(n.x, n.y, R, 0, 7); g.fill();
+    g.lineWidth = sel ? 4 : 2; g.strokeStyle = sel ? "#fff" : "rgba(0,0,0,.5)"; g.stroke(); g.restore();
+    g.textAlign = "center"; g.fillStyle = open ? "#17210f" : "#8d9486"; g.font = `900 34px ${FONT}`; g.fillText(String(i + 1), n.x, n.y + 12);
+    if (done) { g.strokeStyle = "#fff"; g.lineWidth = 4; g.lineCap = "round"; g.beginPath(); g.moveTo(n.x + 22, n.y - 38); g.lineTo(n.x + 29, n.y - 30); g.lineTo(n.x + 42, n.y - 48); g.stroke(); }
+    if (cfg.ctf) { g.fillStyle = open ? "#17210f" : "#8d9486"; g.fillRect(n.x - 24, n.y - 42, 2.5, 18); g.beginPath(); g.moveTo(n.x - 21.5, n.y - 42); g.lineTo(n.x - 8, n.y - 37); g.lineTo(n.x - 21.5, n.y - 31); g.closePath(); g.fill(); }
+    if (!open) { g.fillStyle = "#aab3a0"; g.fillRect(n.x + 24, n.y - 40, 16, 12); g.strokeStyle = "#aab3a0"; g.lineWidth = 3; g.beginPath(); g.arc(n.x + 32, n.y - 40, 5, Math.PI, 0); g.stroke(); }
+    g.fillStyle = open ? "#e9eedf" : "#7c8476"; g.font = `700 14px ${FONT}`; g.fillText(cfg.name, n.x, n.y + 72);
+    const ks = levelKinds(i); const x0 = n.x - (ks.length - 1) * 9;
+    ks.forEach((k, j) => { const pal = PAL[k] || PAL.enemy; g.fillStyle = open ? pal.mid : "#444a42"; g.beginPath(); g.arc(x0 + j * 18, n.y + 88, k === "heavy" ? 7 : 5.5, 0, 7); g.fill(); g.strokeStyle = "rgba(0,0,0,.6)"; g.lineWidth = 1; g.stroke(); });
+  }
+  const cfg = levelCfg(mapSel), ks = levelKinds(mapSel), cnt = {}; ks.forEach(k => cnt[k] = (cnt[k] || 0) + 1);
+  g.textAlign = "center"; g.fillStyle = "#cfd8c6"; g.font = `600 15px ${FONT}`;
+  g.fillText(`${cfg.name} · ` + (cfg.ctf ? "OBJECTIVE: capture the enemy flag · " : "") + Object.entries(cnt).map(([k, n]) => `${n} ${KINDS[k].label}${n > 1 ? "s" : ""}`).join(", "), W / 2, 570);
+  g.fillStyle = "#8d9886"; g.font = `600 13px ${FONT}`;
+  g.fillText(lastInput === "pad" && padConnected ? "D-pad to pick · A to play · B to go back" : touchMode ? "tap a level to play · finished levels can be replayed" : "arrows / WASD to pick · ENTER or click to play · M or ESC to go back", W / 2, 596);
+  if (mapMax() >= MAP_N) { g.fillStyle = "#cfd8c6"; g.font = `700 15px ${FONT}`; g.textAlign = "center"; g.fillText(`levels ${base + 1}–${base + MAP_N}`, W / 2, 138); }
+  drawButton(uiButtons()[0], "‹ BACK", false);
+  for (const b of uiButtons()) if (b.id[0] === "p") drawButton(b, b.id === "pg-" ? "‹ PREV 10" : "NEXT 10 ›", false);
+  drawButton(uiButtons()[1], "SAVE PROGRESS: " + (saveOn ? "ON" : "OFF") + (touchMode ? "" : "  [T]"), saveOn);
+}
+
+// ---------- missile button (DOM) ----------
+let uiAmmo = -1, uiProg = -1;
+function syncMissileUI() {
+  if (!player) return;
+  const a = player.ammo, prog = a < MISSILE_MAX ? Math.round(player.missileT / MISSILE_RELOAD * 100) : 0;
+  if (a !== uiAmmo) { uiAmmo = a; for (let i = 0; i < MISSILE_MAX; i++) $("pip" + i).classList[i < a ? "add" : "remove"]("on"); $("fireBtn").classList[a ? "remove" : "add"]("empty"); }
+  if (prog !== uiProg) { uiProg = prog; $("prog").style.width = prog + "%"; }
+}
+
+// ---------- input / loop ----------
+// start / retry / next level / resume (Enter key or a tap); short lockout so a panicky tap can't skip the screen
+function openMap() { mapFrom = mode; mapSel = mode === "title" ? nextOpen() : clamp(level, 0, mapMax()); mode = "map"; }
+function startFromMap(i) { if (!unlocked(i)) return; fireHold = true; gameMode = "campaign"; startLevel(i); }
+function toMenu() { mode = "title"; releaseAll(); }
+// ---------- settings: controller aim ----------
+// values are multipliers of the built-in tuning (dead zone is the raw stick radius); saved in localStorage
+const SET_KEY = "tankbattle.padset";
+const SET_ROWS = [
+  { key: "speed", label: "AIM SPEED",    hint: "how fast the turret can swing (max turn rate)",       min: 0.3, max: 2.5, def: 1,    fmt: v => Math.round(v * 100) + "%" },
+  { key: "resp",  label: "AIM RESPONSE", hint: "how sharply the turret follows small stick movements", min: 0.25, max: 3,  def: 1,    fmt: v => Math.round(v * 100) + "%" },
+  { key: "dz",    label: "DEAD ZONE",    hint: "how far the stick must move before it counts",         min: 0.05, max: 0.4, def: 0.22, fmt: v => Math.round(v * 100) + "%" },
+];
+const setVals = {}; SET_ROWS.forEach(r => setVals[r.key] = r.def);
+let setSel = 0, setFrom = "title", prevAng = 0;
+function applySettings() { PAD_AIM_MAX = 4.5 * setVals.speed; PAD_AIM_EASE = 8 * setVals.resp; PAD_DZ = setVals.dz; }
+function loadSettings() { try { const o = JSON.parse(store("get", SET_KEY) || "{}"); SET_ROWS.forEach(r => { if (typeof o[r.key] === "number") setVals[r.key] = clamp(o[r.key], r.min, r.max); }); } catch (e) {} applySettings(); }
+function setValue(i, v) { const r = SET_ROWS[i]; setVals[r.key] = clamp(Math.round(v * 100) / 100, r.min, r.max); applySettings(); store("set", SET_KEY, JSON.stringify(setVals)); }
+function setStep(i, d) { const r = SET_ROWS[i]; setValue(i, setVals[r.key] + d * (r.max - r.min) / 20); }
+function resetSettings() { SET_ROWS.forEach((r, i) => setValue(i, r.def)); }
+const setTrack = i => ({ x: 290, y: 205 + i * 80, w: 380 });
+function sliderAt(c) { for (let i = 0; i < SET_ROWS.length; i++) { const t = setTrack(i); if (c.x >= t.x - 14 && c.x <= t.x + t.w + 14 && Math.abs(c.y - t.y) < 24) { setSel = i; const r = SET_ROWS[i]; setValue(i, r.min + clamp((c.x - t.x) / t.w, 0, 1) * (r.max - r.min)); return true; } } return false; }
+function openSettings() { setFrom = mode; mode = "settings"; }
+function drawSettings() {
+  const c = clock();
+  g.drawImage(groundTex, 0, 0); g.fillStyle = "rgba(6,10,6,.8)"; g.fillRect(0, 0, W, H);
+  titleText("SETTINGS", 92, 54, "#f4f7e8", "#9fb07a");
+  g.textAlign = "center"; g.font = `800 14px ${FONT}`; g.fillStyle = "#e0b45a"; g.fillText("C O N T R O L L E R   A I M", W / 2, 124);
+  SET_ROWS.forEach((r, i) => {
+    const t = setTrack(i), on = i === setSel, v = setVals[r.key], k = (v - r.min) / (r.max - r.min), dk = (r.def - r.min) / (r.max - r.min);
+    g.textAlign = "left"; g.font = `900 16px ${FONT}`; g.fillStyle = on ? "#fff" : "#c9d3bd"; g.fillText(r.label, t.x, t.y - 22);
+    g.textAlign = "right"; g.fillStyle = on ? "#ffd36a" : "#a9b59e"; g.fillText(r.fmt(v), t.x + t.w, t.y - 22);
+    g.fillStyle = "rgba(255,255,255,.14)"; rrect(t.x, t.y - 4, t.w, 8, 4); g.fill();
+    g.fillStyle = on ? "#ffd36a" : "#8fa86f"; rrect(t.x, t.y - 4, t.w * k, 8, 4); g.fill();
+    g.fillStyle = "rgba(255,255,255,.5)"; g.fillRect(t.x + t.w * dk - 1, t.y - 9, 2, 18);          // tick: the default
+    g.save(); if (on) { g.shadowColor = "#ffd36a"; g.shadowBlur = 12; } g.fillStyle = "#f4f7e8"; g.beginPath(); g.arc(t.x + t.w * k, t.y, on ? 11 : 9, 0, 7); g.fill(); g.restore();
+    g.textAlign = "left"; g.font = `600 12px ${FONT}`; g.fillStyle = "#8d9886"; g.fillText(r.hint, t.x, t.y + 26);
+  });
+  // live preview: the turret follows the right stick (or the mouse) with the settings above
+  const cx = W / 2, cy = 482, R = 58;
+  g.strokeStyle = "rgba(255,255,255,.25)"; g.lineWidth = 2; g.beginPath(); g.arc(cx, cy, R, 0, 7); g.stroke();
+  g.strokeStyle = "rgba(255,255,255,.1)"; g.beginPath(); g.arc(cx, cy, R * PAD_DZ, 0, 7); g.stroke();
+  const gp = pad.gp, rx = touch.aim ? touch.aim.vx * touch.aim.mag : gp ? gp.axes[2] || 0 : 0, ry = touch.aim ? touch.aim.vy * touch.aim.mag : gp ? gp.axes[3] || 0 : 0;
+  g.fillStyle = Math.hypot(rx, ry) > PAD_DZ ? "#ffd36a" : "#6b7466"; g.beginPath(); g.arc(cx + rx * R, cy + ry * R, 5, 0, 7); g.fill();
+  g.save(); g.translate(cx, cy); g.rotate(prevAng); g.fillStyle = "#4a8f4e"; rrect(-16, -16, 32, 32, 7); g.fill(); g.fillStyle = "#9be37c"; g.fillRect(0, -4, R - 6, 8); g.fillStyle = "#2f6b36"; g.beginPath(); g.arc(0, 0, 11, 0, 7); g.fill(); g.restore();
+  g.textAlign = "center"; g.font = `600 13px ${FONT}`; g.fillStyle = "#cfd8c6"; g.fillText(padConnected || touchMode ? "Move the aim stick to feel it" : "No controller detected (press a button on it). Mouse aims the preview.", W / 2, 566);
+  g.fillStyle = "#8d9886"; g.font = `600 12.5px ${FONT}`;
+  g.fillText(lastInput === "pad" && padConnected ? "D-pad ↑↓ choose · ←→ adjust · Y reset · B back" : "↑ ↓ choose · ← → adjust (or click a slider) · R reset · ESC back", W / 2, 594);
+  drawButton(uiButtons()[0], "‹ BACK", false); drawButton(uiButtons()[1], "RESET DEFAULTS", false);
+}
+function updateSettings(dt) {
+  const gp = pad.gp, rx = gp ? gp.axes[2] || 0 : 0, ry = gp ? gp.axes[3] || 0 : 0, st = padStick(rx, ry);
+  let a = null;
+  const ts = stickVec(touch.aim);
+  if (ts && touchMode) a = Math.atan2(ts.y, ts.x); else if (st && lastInput === "pad") a = Math.atan2(st.y, st.x); else if (lastInput !== "pad" && !touchMode) { const bx = mouse.x - W / 2, by = mouse.y - 482; if (Math.hypot(bx, by) > 20) a = Math.atan2(by, bx); }
+  if (a === null) return;
+  const dA = angDiff(prevAng, a), step = Math.min(Math.abs(dA) * PAD_AIM_EASE, PAD_AIM_MAX) * dt;
+  prevAng += Math.sign(dA) * Math.min(Math.abs(dA), step);
+}
+// canvas buttons (taps / clicks): rect per mode
+function uiButtons() {
+  if (mode === "map") {
+    const b = [{ id: "back", x: 16, y: 14, w: 120, h: 42 }, { id: "save", x: W - 266, y: H - 58, w: 250, h: 42 }];
+    if (mapPage() > 0) b.push({ id: "pg-", x: 16, y: H - 58, w: 120, h: 42 });
+    if (mapPage() < (mapMax() / MAP_N | 0)) b.push({ id: "pg+", x: 144, y: H - 58, w: 120, h: 42 });
+    return b;
+  }
+  if (mode === "settings") return [{ id: "sback", x: 16, y: 14, w: 120, h: 42 }, { id: "sreset", x: W - 216, y: 14, w: 200, h: 42 }];
+  if (mode === "play") return [];
+  if (mode === "title") {
+    const b = MENU.map((m, i) => ({ id: "m:" + i, x: W / 2 - 290, y: 226 + i * 76, w: 580, h: 66 }));
+    DIFF_ORDER.forEach((n, i) => b.push({ id: "d:" + n, x: W / 2 - 212 + i * 108, y: 506, w: 100, h: 34 }));
+    b.push({ id: "map", x: W - 190, y: 14, w: 176, h: 36 }, { id: "settings", x: 14, y: 14, w: 176, h: 36 });
+    return b;
+  }
+  const o = [{ id: "settings", x: W / 2 - 84, y: 62, w: 168, h: 36 }];
+  return gameMode === "campaign" ? [{ id: "map", x: W / 2 - 184, y: 14, w: 168, h: 42 }, { id: "menu", x: W / 2 + 16, y: 14, w: 168, h: 42 }, ...o] : [{ id: "menu", x: W / 2 - 84, y: 14, w: 168, h: 42 }, ...o];
+}
+function nodePos(i) { const row = i < 5 ? 0 : 1, col = row ? 9 - i : i; return { x: 130 + col * 175, y: row ? 440 : 235 }; }
+function pointerUI(c) {                                    // returns true if the tap/click was used by a button / map node
+  for (const b of uiButtons()) if (c.x >= b.x && c.x <= b.x + b.w && c.y >= b.y && c.y <= b.y + b.h) {
+    if (b.id === "pg-") mapSel = clamp(mapSel - MAP_N, 0, mapMax()); else if (b.id === "pg+") mapSel = clamp(mapSel + MAP_N, 0, mapMax()); else if (b.id.startsWith("d:")) setDiff(b.id.slice(2)); else if (b.id.startsWith("m:")) { menuSel = +b.id.slice(2); advance(); } else if (b.id === "menu") toMenu(); else if (b.id === "settings") openSettings(); else if (b.id === "sback") mode = setFrom; else if (b.id === "sreset") resetSettings(); else if (b.id === "map") openMap(); else if (b.id === "back") mode = mapFrom; else if (b.id === "save") toggleSave();
+    return true;
+  }
+  if (mode === "settings") { sliderAt(c); return true; }
+  if (mode === "map") {
+    for (let j = 0; j < MAP_N; j++) { const n = nodePos(j), i = mapPage() * MAP_N + j; if (i <= mapMax() && Math.hypot(c.x - n.x, c.y - n.y) < 58) { mapSel = i; startFromMap(i); break; } }
+    return true;
+  }
+  return false;
+}
+function advance() {
+  if (performance.now() - modeSince < 700) return;
+  fireHold = true;                                      // the click/key that starts the game must not also shoot
+  if (mode === "map") { startFromMap(mapSel); return; }
+  if (mode === "title") startGame(MENU[menuSel].id);
+  else if (mode === "dead") gameMode === "campaign" ? startLevel(level) : startGame(gameMode);
+  else if (mode === "won") gameMode === "campaign" ? startLevel(level + 1) : startGame(gameMode);
+  else if (mode === "paused") mode = "play";
+}
+function stickVec(s) {
+  if (!s || s.mag < PAD_DZ) return null;
+  return { x: s.vx, y: s.vy, mag: s.mag };
+}
+const toCanvas = t => { const r = cv.getBoundingClientRect(); return { x: (t.clientX - r.left) * W / r.width, y: (t.clientY - r.top) * H / r.height }; };
+const clearers = [];
+function releaseAll() { touch.move = touch.aim = touch.fire = null; clearers.forEach(f => f()); }
+
+// Thumb pads (outside the canvas): a fixed stick whose centre is the ring; the whole gutter is the touch area.
+function bindPad(padId, ringId, knobId, key) {
+  const pad = $(padId), ring = $(ringId), knob = $(knobId);
+  const place = t => {
+    const r = ring.getBoundingClientRect(), R = r.width / 2;
+    const dx = t.clientX - (r.left + R), dy = t.clientY - (r.top + R), l = Math.hypot(dx, dy) || 1, m = Math.min(1, l / R);
+    touch[key] = { id: t.identifier, vx: dx / l, vy: dy / l, mag: m };
+    knob.style.transform = `translate(${dx / l * m * R}px, ${dy / l * m * R}px)`;
+  };
+  const clear = () => { touch[key] = null; knob.style.transform = ""; };
+  clearers.push(clear);
+  pad.addEventListener("touchstart", e => {
+    e.preventDefault(); touchMode = true;
+    for (const t of e.changedTouches) { if (mode !== "play" && mode !== "settings") advance(); else if (!touch[key]) place(t); }
+  }, { passive: false });
+  pad.addEventListener("touchmove", e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) if (touch[key] && touch[key].id === t.identifier) place(t);
+  }, { passive: false });
+  const end = e => { e.preventDefault(); for (const t of e.changedTouches) if (touch[key] && touch[key].id === t.identifier) clear(); };
+  pad.addEventListener("touchend", end, { passive: false });
+  pad.addEventListener("touchcancel", end, { passive: false });
+}
+bindPad("padL", "ringL", "knobL", "move");
+bindPad("padR", "ringR", "knobR", "aim");
+
+// MISSILE button: hold to lock on, then launch homing missiles one after another (works alongside the aim pad)
+const fireBtn = $("fireBtn");
+fireBtn.addEventListener("touchstart", e => {
+  e.preventDefault(); e.stopPropagation(); touchMode = true;
+  if (mode !== "play") { advance(); return; }
+  const t = e.changedTouches[0]; if (!touch.fire) touch.fire = { id: t.identifier };
+  fireBtn.classList.add("held");
+}, { passive: false });
+const fireEnd = e => {
+  e.preventDefault(); e.stopPropagation();
+  for (const t of e.changedTouches) if (touch.fire && touch.fire.id === t.identifier) { touch.fire = null; fireBtn.classList.remove("held"); }
+};
+fireBtn.addEventListener("touchend", fireEnd, { passive: false });
+fireBtn.addEventListener("touchcancel", fireEnd, { passive: false });
+clearers.push(() => fireBtn.classList.remove("held"));
+
+// Canvas taps: start / retry / next / resume, and the pause button
+cv.addEventListener("touchstart", e => {
+  e.preventDefault(); touchMode = true;
+  for (const t of e.changedTouches) {
+    const c = toCanvas(t);
+    if (mode !== "play") { if (!pointerUI(c)) advance(); }
+    else if (c.x > W - 70 && c.y < 56) { mode = "paused"; releaseAll(); }
+  }
+}, { passive: false });
+["touchmove", "touchend", "touchcancel"].forEach(n => cv.addEventListener(n, e => { e.preventDefault(); if (n === "touchmove" && mode === "settings") sliderAt(toCanvas(e.changedTouches[0])); }, { passive: false }));
+document.addEventListener("gesturestart", e => e.preventDefault());          // no pinch-zoom on iOS
+addEventListener("blur", () => { releaseAll(); if (mode === "play") mode = "paused"; });
+function toggleFullscreen() {
+  const d = document, el = d.documentElement;
+  if (d.fullscreenElement || d.webkitFullscreenElement) (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+  else (el.requestFullscreen || el.webkitRequestFullscreen)?.call(el);
+}
+addEventListener("keydown", e => {
+  const k = e.key.toLowerCase(); lastInput = "kbm";
+  if (k === "f" && !e.repeat) { e.preventDefault(); toggleFullscreen(); return; }
+  if (k === "tab") { e.preventDefault(); showBrain = !showBrain; return; }
+  keys[k] = true;
+  if (k === " ") e.preventDefault();
+  if (mode === "map") {
+    const m = { arrowleft: -1, a: -1, arrowright: 1, d: 1 }[k];
+    if (m) mapSel = clamp(mapSel + m, 0, mapMax());
+    else if ("arrowup arrowdown w s".split(" ").includes(k)) mapVert();
+    else if (k === "pageup" || k === "pagedown") mapSel = clamp(mapSel + (k === "pageup" ? -MAP_N : MAP_N), 0, mapMax());
+    else if (k === "escape" || k === "m") mode = mapFrom;
+    else if (k === "t") toggleSave();
+    if (k === "enter" || k === " ") startFromMap(mapSel);
+    return;
+  }
+  if (mode === "settings") {
+    if (k === "arrowup" || k === "w") setSel = (setSel + SET_ROWS.length - 1) % SET_ROWS.length;
+    else if (k === "arrowdown" || k === "s") setSel = (setSel + 1) % SET_ROWS.length;
+    else if (k === "arrowleft" || k === "a") setStep(setSel, -1);
+    else if (k === "arrowright" || k === "d") setStep(setSel, 1);
+    else if (k === "r") resetSettings();
+    else if (k === "escape" || k === "enter") mode = setFrom;
+    return;
+  }
+  if ((k === "o") && (mode === "title" || mode === "paused" || mode === "dead" || mode === "won")) { openSettings(); return; }
+  if (mode === "title") {
+    if (k >= "1" && k <= "3") { menuSel = +k - 1; advance(); return; }
+    if (k === "arrowup" || k === "w") { menuSel = (menuSel + MENU.length - 1) % MENU.length; return; }
+    if (k === "arrowdown" || k === "s") { menuSel = (menuSel + 1) % MENU.length; return; }
+    if (k === "arrowleft" || k === "arrowright" || k === "a" || k === "d") { stepDiff(k === "arrowleft" || k === "a" ? -1 : 1); return; }
+  }
+  if (k === "q" && (mode === "paused" || mode === "dead" || mode === "won")) { toMenu(); return; }
+  if (k === "m" && mode !== "play" && (mode === "title" || gameMode === "campaign")) { openMap(); return; }
+  if (k === "enter" || k === " ") advance();
+  if (k === "escape") { if (mode === "play") mode = "paused"; else if (mode === "paused") mode = "play"; }
+});
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+cv.addEventListener("mousemove", e => {
+  lastInput = "kbm"; const r = cv.getBoundingClientRect(); mouse.x = (e.clientX - r.left) * W / r.width; mouse.y = (e.clientY - r.top) * H / r.height;
+  if (mode === "settings" && mouse.down) sliderAt(mouse);
+  if (mode === "title") for (const b of uiButtons()) if (b.id[0] === "m" && b.id[1] === ":" && mouse.x >= b.x && mouse.x <= b.x + b.w && mouse.y >= b.y && mouse.y <= b.y + b.h) menuSel = +b.id.slice(2);
+});
+cv.addEventListener("mousedown", e => {
+  mouse.down = true;
+  if (mode !== "play") { const r = cv.getBoundingClientRect(); if (!pointerUI({ x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height })) advance(); }
+});
+addEventListener("mouseup", () => mouse.down = false);
+
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  readPad(); padMenus(); padNote = Math.max(0, padNote - dt);
+  if (mode !== prevMode) { prevMode = mode; modeSince = performance.now(); }
+  if (mode === "settings") updateSettings(dt);
+  if (mode === "play") update(dt);
+  else if (mode === "dead" || mode === "won") updateFx(dt);             // let explosions finish behind the banner
+  draw();
+  requestAnimationFrame(frame);
+}
+setDiff(store("get", DIFF_KEY) || "hard");
+loadSettings();
+if (store("get", SAVE_FLAG) === "1") { saveOn = true; loadProgress(); }          // only if the toggle was switched on earlier (off by default)
+requestAnimationFrame(frame);
+if (typeof location !== "undefined" && location.hash === "#boot") startLevel(0);
+if (typeof location !== "undefined" && /^#lvl\d+/.test(location.hash)) { startLevel(+location.hash.slice(4)); const q = new URLSearchParams(location.search); if (q.has("x")) { player.x = +q.get("x"); player.y = +q.get("y"); updateCam(0, true); } }
+if (typeof location !== "undefined" && location.hash === "#map") { cleared.add(0); cleared.add(1); openMap(); mapSel = 2; }
+if (typeof location !== "undefined" && (location.hash === "#free" || location.hash === "#ctf")) startGame(location.hash.slice(1));
+if (typeof location !== "undefined" && location.hash === "#play") startLevel(2);                // handy for screenshots / testing
+if (typeof location !== "undefined" && location.hash === "#showcase") {                          // screenshots: a busy, damaged moment
+  startLevel(3); player.x = 220; player.y = 330; player.turret = -0.12; player.hp = 2; hurtFlash = 0.55;
+  tanks.filter(t => !t.isPlayer).forEach((t, i) => { t.x = 640 + i * 70; t.y = 160 + i * 120; t.hp = Math.max(1, t.maxhp - i); });
+  setTimeout(() => { launchMissile(player); setTimeout(() => launchMissile(player), 220); explosion(560, 300, true); hurt(player, 1, player.x + 20, player.y); }, 900);
+}
+</script>
+</body>
+</html>
