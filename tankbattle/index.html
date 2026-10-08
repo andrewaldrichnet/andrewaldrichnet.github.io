@@ -79,11 +79,30 @@
     .pad { justify-content: flex-end; padding-bottom: 3dvh; box-sizing: border-box; }
     #padL::before { content: ""; height: min(14dvh, 56px); }   /* same height as the missile button so the rings stay level */
   }
+  :root { --jw: 0px; }
+  body.jevOpen { --jw: min(380px, 44vw); padding-right: var(--jw); box-sizing: border-box; }
+  body.jevOpen canvas { max-width: calc(100vw - var(--jw)); width: min(100vw - var(--jw), calc((100dvh - 48px) * 1.5)); }
+  #jevPanel { position: fixed; top: 0; right: 0; bottom: 0; width: min(380px, 44vw); z-index: 50; overflow-y: auto; box-sizing: border-box; padding: 10px 12px;
+              background: rgba(10,14,11,.92); color: #d6ddcf; font: 12px/1.35 ui-monospace, Menlo, monospace; border-left: 1px solid #2c3a2e; }
+  #jevPanel[hidden] { display: none; }
+  #jevPanel h3 { margin: 0 0 8px; font: 700 13px system-ui, sans-serif; color: #7fe08a; display: flex; justify-content: space-between; }
+  #jevPanel h3 button { background: none; border: 0; color: #d6ddcf; font-size: 16px; cursor: pointer; }
+  #jevPanel .call { border: 1px solid #2c3a2e; border-radius: 8px; padding: 7px 9px; margin-bottom: 9px; }
+  #jevPanel .call.old { opacity: .6; }
+  #jevPanel .meta { color: #8fa08f; margin-bottom: 4px; }
+  #jevPanel pre { margin: 0 0 6px; white-space: pre-wrap; color: #aebba9; }
+  #jevPanel .q { font-weight: 700; color: #ffd05a; margin: 6px 0 3px; }
+  #jevPanel .opt { display: grid; grid-template-columns: 78px 1fr 40px; gap: 6px; align-items: center; }
+  #jevPanel .bar { height: 7px; background: #26332a; border-radius: 4px; overflow: hidden; }
+  #jevPanel .bar i { display: block; height: 100%; background: #5aa96a; }
+  #jevPanel .opt.top .bar i { background: #7fe08a; }
+  #jevPanel .opt.picked { color: #ffd05a; font-weight: 700; }
+  #jevPanel .opt.picked .bar i { background: #ffd05a; }
 </style>
 </head>
 <body>
 <div id="bar">
-  <b>WASD</b> move · <b>mouse</b> aim · <b>SPACE</b>/<b>click</b> cannon · hold <b>P</b>/<b>V</b>: lock-on missile · <b>TAB</b> brain overlay · <b>ESC</b> pause · <b>M</b> level map · <b>F</b> fullscreen · controller supported
+  <b>WASD</b> move · <b>mouse</b> aim · <b>SPACE</b>/<b>click</b> cannon · hold <b>P</b>/<b>V</b>: lock-on missile · <b>TAB</b> brain overlay · <b>J</b>/JEV chip: call log · <b>ESC</b> pause · <b>M</b> level map · <b>F</b> fullscreen · controller supported
 </div>
 <div id="padHelp" role="dialog" aria-label="Controller controls" hidden>
   <div class="card">
@@ -102,6 +121,7 @@
     <p class="go">Press any button to continue</p>
   </div>
 </div>
+<div id="jevPanel" hidden><h3><span>JEV calls</span><button type="button" id="jevClose" aria-label="Close">✕</button></h3><div id="jevBody"></div></div>
 <div id="rotate">Rotate your phone to landscape ↻</div>
 <div id="game">
   <div class="pad" id="padL">
@@ -163,6 +183,7 @@ const MOVE_OPTS = [
   { id: "wait",   description: "wait" },
 ];
 const DODGE_TEMP = 0.6;      // sampling temperature cap while a dodge is on offer
+const MLP_GAP_MS = 400;       // the MLP is instant, so it's rate-limited: one tank decided every 400ms, even under fire
 const MAX_PER_CALL = 3;      // tanks decided per JEV call (rotates if more)
 let rr = 0;                  // round-robin cursor
 
@@ -333,6 +354,21 @@ let respawns = [];
 let flag = null, toast = null;                        // capture-the-flag state, and the big on-screen message
 let level = 0, walls = [], moats = [], tanks = [], bullets = [], fx = [], player = null;
 let mode = "title";            // title | play | paused | dead | won
+const jevLog = [];
+const jevPanel = document.getElementById("jevPanel"), jevBody = document.getElementById("jevBody");
+const esc = v => String(v).replace(/[&<>]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+function toggleJevPanel(on = jevPanel.hidden) { jevPanel.hidden = !on; document.body.classList.toggle('jevOpen', on); if (on) renderJevPanel(); }
+document.getElementById("jevClose").onclick = () => toggleJevPanel(false);
+function renderJevPanel() {
+  if (jevPanel.hidden) return;
+  jevBody.innerHTML = jevLog.map((c, n) => `<div class="call${n ? " old" : ""}"><div class="meta">#${c.n} · ${c.ms.toFixed(0)}ms${c.err ? " · FAILED (scripted fallback)" : ""}</div>
+    <pre>${esc(c.state)}</pre>` + c.items.map(it => `<div class="q">${esc(it.question)}</div>` +
+      it.options.map((o, i) => { const p = it.probs ? it.probs[i] : 0; return `<div class="opt${it.probs && p === Math.max(...it.probs) ? " top" : ""}${o.id === it.picked ? " picked" : ""}" title="${esc(o.description)}">
+        <span>${esc(o.id)}${o.id === it.picked ? " ◀" : ""}</span><span class="bar"><i style="width:${(p * 100).toFixed(1)}%"></i></span><span>${(p * 100).toFixed(1)}%</span></div>`; }).join("")).join("") + "</div>").join("") || "<div class='meta'>No calls yet.</div>";
+}
+addEventListener("keydown", e => { if (e.key.toLowerCase() === "j" && !e.repeat) toggleJevPanel(); });
+let jevChip = { x: 0, y: 0, w: 0, h: 0 };
+const inChip = c => c.x >= jevChip.x && c.x <= jevChip.x + jevChip.w && c.y >= jevChip.y && c.y <= jevChip.y + jevChip.h;
 let showBrain = true, inflight = false, lastThink = 0, jevOK = false, jevMs = 0, jevCalls = 0;
 let tick = 0;
 const coarse = matchMedia("(pointer: coarse)").matches;   // phone / tablet
@@ -415,7 +451,7 @@ let lockTarget = null, lockT = 0;                            // missile lock-on:
 let touchLock = null;                                        // phone: enemy the next cannon shot will lock onto (nearest the aim line)
 let autoTarget = null, autoErr = Infinity;                  // enemy the auto-aim is locked on, and how far the turret still is from it
 let prevMode = "title", modeSince = 0;
-// level map + progress. Saving to localStorage is a toggle (T on the map screen) and is OFF by default.
+// level map + progress. Saving to localStorage is a toggle (T on the map screen) and is ON by default (switching it off is remembered).
 const MAP_N = 10, SAVE_KEY = "tankbattle.progress.v1", SAVE_FLAG = "tankbattle.save";
 let saveOn = false, mapSel = 0, mapFrom = "title"; const cleared = new Set();
 function store(op, k, v) {
@@ -423,7 +459,7 @@ function store(op, k, v) {
 }
 function saveProgress() { if (saveOn) store("set", SAVE_KEY, JSON.stringify([...cleared])); }
 function loadProgress() { try { JSON.parse(store("get", SAVE_KEY) || "[]").forEach(i => cleared.add(i)); } catch (e) {} }
-function toggleSave() { saveOn = !saveOn; if (saveOn) { store("set", SAVE_FLAG, "1"); loadProgress(); saveProgress(); } else store("remove", SAVE_FLAG); }
+function toggleSave() { saveOn = !saveOn; if (saveOn) { store("set", SAVE_FLAG, "1"); loadProgress(); saveProgress(); } else store("set", SAVE_FLAG, "0"); }
 const mapMax = () => Math.max(MAP_N - 1, level, (cleared.size ? Math.max(...cleared) : -1) + 1);   // highest level the map shows (levels go on forever)
 const mapVert = () => { const base = mapPage() * MAP_N, j = mapSel - base; mapSel = Math.min(mapMax(), base + MAP_N - 1 - j); };   // up/down: the node above/below on the two-row map
 const mapPage = () => mapSel / MAP_N | 0;
@@ -684,9 +720,11 @@ function optionsFor(t) {
 // ---------- JEV backend: the JEV server (default) or the model in this browser (WebGPU) ----------
 // ?jev=local runs the tuned GGUF in a worker (remembered; ?jev=server switches back). ?quant=q8 picks the bigger file.
 const URLQ = new URLSearchParams(typeof location === "undefined" ? "" : location.search);
+// the distilled MLP (training/distill.py) is the default: instant, and phones can't hold the in-browser LLM without the tab dying
+const DEFAULT_JEV = "mlp";
 const JEV_MODE = (() => {
   const q = URLQ.get("jev");
-  try { if (q) localStorage.setItem("tb.jev", q); return q || localStorage.getItem("tb.jev") || "local"; } catch (e) { return q || "local"; }
+  try { if (q) localStorage.setItem("tb.jev", q); return q || localStorage.getItem("tb.jev") || DEFAULT_JEV; } catch (e) { return q || DEFAULT_JEV; }
 })();
 const IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);   // iOS: CPU by default, WebGPU there blows the tab's memory budget
 const localJev = { state: "idle", pct: 0, worker: null, pending: new Map(), seq: 0, calls: 0 };
@@ -721,7 +759,47 @@ function startLocalJev() {
   };
   w.onerror = () => { localJev.state = "error"; localJev.why = "worker failed"; };
 }
+// ---- distilled MLP: tiny net imitating the tuned JEV model. featuresFor() must match features() in training/distill.py ----
+const MLP_DIRS = ["E", "SE", "S", "SW", "W", "NW", "N", "NE"], MLP_DISTS = ["very close", "close", "medium range", "far"];
+const MLP_TANK = /^(T\d+): hp (\d+)\/(\d+), (loaded|reloading), player (very close|close|medium range|far) (\w+), (clear shot|no line of sight), missile (none|from (\w+) hits in ([\d.]+)s), walls (\w+)$/;
+const MLP_PLAYER = /^Player: hp (\d+), (standing still|moving (\w+)),/;
+let mlpNet = null, mlpLoading = false;
+function mlpLoad() {
+  if (mlpNet || mlpLoading) return; mlpLoading = true;
+  fetch("jev-mlp.json").then(r => r.json()).then(j => { mlpNet = j; }).catch(() => { mlpLoading = false; });
+}
+function featuresFor(state, tid, optionIds, moves) {
+  const lines = state.split("\n"), oh = (v, xs) => xs.map(x => x === v ? 1 : 0);
+  const pm = MLP_PLAYER.exec(lines.find(l => l.startsWith("Player:")));
+  const tanks = lines.map(l => MLP_TANK.exec(l)).filter(Boolean), m = tanks.find(t => t[1] === tid);
+  const hp = +m[2], mx = +m[3], mis = m[8] !== "none", still = pm[2] === "standing still";
+  return [hp / mx, hp / 3, mx / 3, m[4] === "loaded" ? 1 : 0, ...oh(m[5], MLP_DISTS), ...oh(m[6], MLP_DIRS),
+    m[7] === "clear shot" ? 1 : 0, mis ? 1 : 0, ...(mis ? oh(m[9], MLP_DIRS) : Array(8).fill(0)), mis ? Math.min(+m[10], 2) / 2 : 0,
+    ..."ESWN".split("").map(c => m[11].includes(c) ? 1 : 0), +pm[1] / 5, still ? 1 : 0, ...(still ? Array(8).fill(0) : oh(pm[3], MLP_DIRS)),
+    lines[0].startsWith("ALERT") ? 1 : 0, (tanks.length - 1) / 2, ...moves.map(o => optionIds.includes(o) ? 1 : 0)];
+}
+function mlpLayer(x, w, b, relu) {
+  const out = b.slice();
+  for (let i = 0; i < x.length; i++) if (x[i]) { const row = w[i]; for (let j = 0; j < out.length; j++) out[j] += x[i] * row[j]; }
+  return relu ? out.map(v => Math.max(0, v)) : out;
+}
+function mlpDecide(body) {
+  const N = mlpNet, out = [];
+  for (const it of body.items) {
+    const ids = it.options.map(o => o.id);
+    const x = featuresFor(body.state, it.id, ids, N.moves);
+    const z = mlpLayer(mlpLayer(mlpLayer(x, N.w1, N.b1, true), N.w2, N.b2, true), N.w3, N.b3, false);
+    const zs = ids.map(id => z[N.moves.indexOf(id)]), mxz = Math.max(...zs), e = zs.map(v => Math.exp(v - mxz)), t = e.reduce((a, b) => a + b, 0);
+    out.push({ option_ids: ids, probabilities: e.map(v => v / t) });
+  }
+  return out;
+}
 async function jevDecide(body) {
+  if (JEV_MODE === "mlp") {
+    mlpLoad();
+    if (!mlpNet) throw new Error("mlp loading");
+    return mlpDecide(body);
+  }
   if (JEV_MODE !== "local") {
     const r = await fetch("/v1/decide/shared", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) });
     if (!r.ok) throw new Error(r.status);
@@ -748,7 +826,7 @@ async function think() {
   // tanks with a missile heading at them are decided first; the rest take turns
   const threatened = alive.filter(t => threatFor(t)), rest = alive.filter(t => !threatFor(t));
   const off = rest.length ? rr % rest.length : 0;
-  const foes = [...threatened, ...rest.slice(off), ...rest.slice(0, off)].slice(0, MAX_PER_CALL);
+  const foes = [...threatened, ...rest.slice(off), ...rest.slice(0, off)].slice(0, JEV_MODE === "mlp" ? 1 : MAX_PER_CALL);
   rr = rest.length ? (rr + foes.filter(t => !threatened.includes(t)).length) % rest.length : 0;
   const offered = foes.map(optionsFor);
   inflight = true;
@@ -762,15 +840,21 @@ async function think() {
   try {
     const out = await jevDecide(body);
     jevMs = performance.now() - t0; jevCalls++; jevOK = true;
+    const entry = { n: jevCalls, ms: jevMs, state: body.state, items: body.items.map((it, i) => ({ question: it.question, options: it.options, probs: out[i].probabilities, ids: out[i].option_ids })) };
+    jevLog.unshift(entry); jevLog.length = Math.min(jevLog.length, 8);
     const T = levelCfg(level).temp;
     foes.forEach((t, i) => {
       if (t.hp <= 0) return;
       const dodgeOn = offered[i].some(o => o.id === "dodge");
       const m = pick(out[i], dodgeOn ? Math.min(T, DODGE_TEMP) : T);   // a threatened tank follows JEV's pick more closely
       t.order = { move: m.id }; t.orderT = ORDER_TTL; t.brain = m;
+      entry.items[i].picked = m.id;
     });
+    renderJevPanel();
   } catch (e) {
     jevOK = false;
+    jevLog.unshift({ n: jevCalls + 1, ms: performance.now() - t0, state: body.state, err: true, items: body.items.map(it => ({ question: it.question, options: it.options })) }); jevLog.length = Math.min(jevLog.length, 8);
+    renderJevPanel();
     foes.forEach(t => { t.order = fallback(t); t.orderT = ORDER_TTL; t.brain = null; });
   }
   inflight = false;
@@ -1113,7 +1197,7 @@ function update(dt) {
   else if (gameMode !== "free" && (flag ? flag.captured : tanks.every(t => t.isPlayer || t.hp <= 0))) { mode = "won"; if (gameMode === "campaign") { cleared.add(level); saveProgress(); } }
 
   const underFire = tanks.some(t => !t.isPlayer && t.hp > 0 && threatFor(t));
-  if (mode === "play" && !inflight && (underFire || performance.now() - lastThink > THINK_MS)) {
+  if (mode === "play" && !inflight && (JEV_MODE === "mlp" ? performance.now() - lastThink >= MLP_GAP_MS : underFire || performance.now() - lastThink > THINK_MS)) {
     lastThink = performance.now(); think();
   }
 }
@@ -1603,9 +1687,10 @@ function drawHUD() {
   if (WW > W || WH > H) drawMinimap();
   // JEV status chip, bottom-left
   const lj = JEV_MODE === "local" ? localJev : null;
-  const label = lj && lj.state === "loading" ? `JEV ${lj.stage || "loading"} ${lj.pct}%${lj.prev ? " (last run died: " + lj.prev + ")" : ""}` : lj && lj.state === "error" ? `JEV local: ${lj.why}`
+  const label = JEV_MODE === "mlp" ? (mlpNet ? `JEV mlp ${jevMs.toFixed(1)}ms` : "JEV mlp loading…") : lj && lj.state === "loading" ? `JEV ${lj.stage || "loading"} ${lj.pct}%${lj.prev ? " (last run died: " + lj.prev + ")" : ""}` : lj && lj.state === "error" ? `JEV local: ${lj.why}`
     : jevCalls === 0 && !jevOK ? "JEV…" : jevOK ? `JEV${lj ? " local" : ""} ${jevMs.toFixed(0)}ms` : "JEV OFFLINE";
   const cw = 18 * s + label.length * 6.6 * s;
+  jevChip = { x: 12, y: H - 12 - 22 * s, w: cw, h: 22 * s };
   g.fillStyle = "rgba(10,14,11,.62)"; rrect(12, H - 12 - 22 * s, cw, 22 * s, 11 * s); g.fill();
   g.fillStyle = jevOK ? "#7fe08a" : "#ff7a68"; g.beginPath(); g.arc(24 * s * 0.75 + 4, H - 12 - 11 * s, 4 * s, 0, 7); g.fill();
   g.textAlign = "left"; g.font = `600 ${11 * s}px ${FONT}`; g.fillStyle = "#d6ddcf"; g.fillText(label, 12 + 18 * s, H - 12 - 7 * s);
@@ -1973,6 +2058,7 @@ cv.addEventListener("touchstart", e => {
   for (const t of e.changedTouches) {
     const c = toCanvas(t);
     if (mode !== "play") { if (!pointerUI(c)) advance(); }
+    else if (inChip(c)) toggleJevPanel();
     else if (c.x > W - 70 && c.y < 56) { mode = "paused"; releaseAll(); }
   }
 }, { passive: false });
@@ -2029,6 +2115,7 @@ cv.addEventListener("mousemove", e => {
 });
 cv.addEventListener("mousedown", e => {
   mouse.down = true;
+  { const r = cv.getBoundingClientRect(); if (mode === "play" && inChip({ x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height })) { toggleJevPanel(); return; } }
   if (mode !== "play") { const r = cv.getBoundingClientRect(); if (!pointerUI({ x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height })) advance(); }
 });
 addEventListener("mouseup", () => mouse.down = false);
@@ -2046,7 +2133,7 @@ function frame(now) {
 }
 setDiff(store("get", DIFF_KEY) || "hard");
 loadSettings();
-if (store("get", SAVE_FLAG) === "1") { saveOn = true; loadProgress(); }          // only if the toggle was switched on earlier (off by default)
+if (store("get", SAVE_FLAG) !== "0") { saveOn = true; loadProgress(); }          // on by default; stays off only if the player switched it off
 requestAnimationFrame(frame);
 if (typeof location !== "undefined" && location.hash === "#boot") startLevel(0);
 if (typeof location !== "undefined" && /^#lvl\d+/.test(location.hash)) { startLevel(+location.hash.slice(4)); const q = new URLSearchParams(location.search); if (q.has("x")) { player.x = +q.get("x"); player.y = +q.get("y"); updateCam(0, true); } }
